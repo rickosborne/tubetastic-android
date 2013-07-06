@@ -12,4 +12,7 @@
 	<string name="instructions">Start a new game:\nTap the square to align the tubes.</string>
 	<string name="new_game">New Game</string>
 
+	<string name="prefs_name">TubeTastic</string>
+	<string name="prefs_score_high">score:high</string>
+
 </resources>

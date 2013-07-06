@@ -16,7 +16,8 @@ public class SplashActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.splash_activity);
-        int highScore = ScoreKeeper.getHighScore();
+        ScoreKeeper scoreKeeper = new ScoreKeeper(getApplicationContext());
+        int highScore = scoreKeeper.getHighScore();
         if (highScore > 0) {
             String scoreTemplate = getString(R.string.high_score);
             String scoreText = String.format(scoreTemplate, highScore);
