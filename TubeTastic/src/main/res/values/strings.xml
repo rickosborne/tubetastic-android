@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">TubeTastic</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="app_title">TubeTastic!</string>
+    <string name="title_activity_splash">TubeTastic!</string>
+	<string name="credit">by Rick Osborne</string>
+	<string name="space"> </string>
+	<string name="high_score">High Score: %d</string>
+	<string name="instructions">Start a new game:\nTap the square to align the tubes.</string>
+	<string name="new_game">New Game</string>
+
+</resources>

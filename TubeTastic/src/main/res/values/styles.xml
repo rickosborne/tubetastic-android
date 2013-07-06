@@ -1,0 +1,48 @@
+<resources>
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    </style>
+
+	<style name="FullScreenActivity" parent="AppTheme">
+		<item name="android:background">#000000</item>
+		<item name="android:windowNoTitle">true</item>
+		<item name="android:windowFullscreen">true</item>
+	</style>
+
+	<style name="Font1Text">
+		<item name="font">KiteOne-Regular</item>
+	</style>
+
+	<style name="SplashCredit" parent="Font1Text">
+		<item name="android:textColor">#444444</item>
+	</style>
+
+	<style name="SplashScore" parent="Font1Text">
+		<item name="android:textColor">#cccccc</item>
+		<item name="android:textSize">24sp</item>
+	</style>
+
+	<style name="SplashInst" parent="Font1Text">
+		<item name="android:textColor">#999999</item>
+		<item name="android:textSize">20sp</item>
+	</style>
+
+	<style name="SplashNewGame">
+		<item name="android:textSize">20sp</item>
+	</style>
+
+</resources>
