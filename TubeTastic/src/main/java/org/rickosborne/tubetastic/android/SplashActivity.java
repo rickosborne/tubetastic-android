@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
-import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -34,7 +33,7 @@ public class SplashActivity extends Activity {
         return true;
     }
 
-    public void onNewGame (View sender) {
+    public void onNewGame () {
         Intent i = new Intent(this, GameActivity.class);
         startActivity(i);
     }
