@@ -108,6 +108,7 @@ public class TubeTile extends BaseTile {
                 .setCallback(onComplete)
                 .setCallbackTriggers(TweenCallback.COMPLETE)
                 .target(rotation + 90)
+                .start(TweenManagers.manager)
             ;
             board.interruptSweep();
         }
@@ -139,6 +140,7 @@ public class TubeTile extends BaseTile {
                 .setCallback(onComplete)
                 .setCallbackTriggers(TweenCallback.COMPLETE)
                 .target(0)
+                .start(TweenManagers.manager)
             ;
         }
         else {
@@ -166,6 +168,7 @@ public class TubeTile extends BaseTile {
                 .setCallback(onComplete)
                 .setCallbackTriggers(TweenCallback.COMPLETE)
                 .target(x, y)
+                .start(TweenManagers.manager)
             ;
         }
         else {
