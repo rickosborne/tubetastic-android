@@ -20,18 +20,17 @@ public class BaseTile {
         SUNK
     }
 
-    public static final String NORTH = "N";
-    public static final String SOUTH = "S";
-    public static final String EAST = "E";
-    public static final String WEST = "W";
+    public static final String DIRECTION_NORTH = "N";
+    public static final String DIRECTION_SOUTH = "S";
+    public static final String DIRECTION_EAST = "E";
+    public static final String DIRECTION_WEST = "W";
+    public static final int DEGREES_NORTH =   0;
+    public static final int DEGREES_EAST  =  90;
+    public static final int DEGREES_SOUTH = 180;
+    public static final int DEGREES_WEST  = 270;
     public static final int directionCount = 4;
-    public static final int[] outletDegrees = new int[]{0, 90, 180, 270};
-    public static final String[] outletDirections = new String[]{
-            BaseTile.NORTH,
-            BaseTile.EAST,
-            BaseTile.SOUTH,
-            BaseTile.WEST
-    };
+    public static final int[] outletDegrees = new int[]{DEGREES_NORTH, DEGREES_EAST, DEGREES_SOUTH, DEGREES_WEST};
+    public static final String[] outletDirections = new String[]{DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST};
     public static final SparseArray<String> directionFromDegrees;
     public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
     public static final SparseArray<OutletOffset> outletOffsets;
@@ -56,10 +55,10 @@ public class BaseTile {
             outletRotationsReverse.put(degrees, submap);
             OutletOffset offset = new OutletOffset();
             switch (degrees) {
-                case   0: offset.col =  0; offset.row = -1; break;
-                case  90: offset.col =  1; offset.row =  0; break;
-                case 180: offset.col =  0; offset.row =  1; break;
-                case 270: offset.col = -1; offset.row =  0; break;
+                case DEGREES_NORTH : offset.col =  0; offset.row = -1; break;
+                case DEGREES_EAST  : offset.col =  1; offset.row =  0; break;
+                case DEGREES_SOUTH : offset.col =  0; offset.row =  1; break;
+                case DEGREES_WEST  : offset.col = -1; offset.row =  0; break;
             }
             outletOffsets.put(degrees, offset);
         }
@@ -86,7 +85,7 @@ public class BaseTile {
     protected GameBoard board = null;
     protected Power power = Power.NONE;
     protected int id = makeId(0, 0);
-    protected SparseBooleanArray outlets = new SparseBooleanArray(directionCount);
+    protected Outlets outlets = new Outlets();
     protected float rotation = 0;
     protected int outletRotation = 0;
     protected float midpoint = 0;
@@ -103,14 +102,11 @@ public class BaseTile {
         this.size = size;
         this.board = board;
         this.id = makeId(colNum, rowNum);
-        for (int degrees : outletDegrees) {
-            this.outlets.put(degrees, false);
-        }
         this.resize(x, y, size);
     }
 
     public boolean hasOutletTo(int degrees) {
-        return this.outlets.get(degrees, false);
+        return this.outlets.hasOutlet(degrees);
     }
 
     public boolean hasOutletTo(String direction) {
