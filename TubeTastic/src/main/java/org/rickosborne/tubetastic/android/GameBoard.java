@@ -162,4 +162,20 @@ public class GameBoard {
 
     public boolean isSettled() { return settled; }
 
+    public void tileDropComplete(BaseTile tile, int destinationColNum, int destinationRowNum) {
+
+    }
+
+    public void tileVanishComplete() {
+
+    }
+
+    public void interruptSweep() {
+
+    }
+
+    public void readyForSweep() {
+
+    }
+
 }

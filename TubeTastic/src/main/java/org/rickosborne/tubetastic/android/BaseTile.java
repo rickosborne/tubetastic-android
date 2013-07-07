@@ -1,7 +1,9 @@
 package org.rickosborne.tubetastic.android;
 
 import android.util.SparseArray;
-import android.util.SparseBooleanArray;
+import aurelienribon.tweenengine.BaseTween;
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,6 +64,7 @@ public class BaseTile {
             }
             outletOffsets.put(degrees, offset);
         }
+        Tween.registerAccessor(BaseTile.class, new BaseTileTweener());
     }
 
     public static int makeId (int colNum, int rowNum) {
@@ -79,16 +82,17 @@ public class BaseTile {
 
     protected int colNum = 0;
     protected int rowNum = 0;
-    protected float x = 0;
-    protected float y = 0;
-    protected float size = 0;
+    protected float x = 0f;
+    protected float y = 0f;
+    protected float size = 0f;
     protected GameBoard board = null;
     protected Power power = Power.NONE;
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
-    protected float rotation = 0;
+    protected float rotation = 0f;
     protected int outletRotation = 0;
-    protected float midpoint = 0;
+    protected float midpoint = 0f;
+    protected float alpha = 0f;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         init(colNum, rowNum, x, y, size, board);
@@ -148,6 +152,23 @@ public class BaseTile {
         midpoint = size * 0.5f;
         this.x = x + midpoint;
         this.y = y + midpoint;
+    }
+
+    public float getX() { return x; }
+    public float getY() { return y; }
+    public float getRotation() { return rotation; }
+    public float getSize() { return size; }
+    public float getAlpha() { return alpha; }
+
+    public void setX(float x) { this.x = x; }
+    public void setY(float y) { this.y = y; }
+    public void setRotation(float rotation) { this.rotation = rotation; }
+    public void setSize(float size) { this.size = size; }
+    public void setAlpha(float alpha) { this.alpha = alpha; }
+    public void setColRow(int colNum, int rowNum) {
+        this.colNum = colNum;
+        this.rowNum = rowNum;
+        this.id = makeId(colNum, rowNum);
     }
 
 }
