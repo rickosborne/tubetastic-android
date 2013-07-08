@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
@@ -30,14 +31,8 @@ public class SinkTile extends BaseTile {
 
     @Override
     public void draw(ShapeRenderer shape) {
-        shape.begin(ShapeRenderer.ShapeType.FilledCircle);
-        shape.setColor(COLOR_SINK);
-        shape.filledCircle(x + midpoint, y + midpoint, midpoint - padding);
-        shape.end();
-        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
-        shape.setColor(COLOR_ARC);
-        shape.filledRect(x, y + midpoint - padding, midpoint, padding * 2);
-        shape.end();
+        ShapeDrawer.circle(shape, x + midpoint, y + midpoint, midpoint - padding, COLOR_SINK);
+        ShapeDrawer.line(shape, x, y + midpoint, x + midpoint, y + midpoint, arcWidth, COLOR_ARC);
     }
 
 }

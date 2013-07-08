@@ -3,6 +3,8 @@ package org.rickosborne.tubetastic.android;
 import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class TubeTile extends BaseTile {
 
@@ -184,6 +186,30 @@ public class TubeTile extends BaseTile {
 
     public void onVanishComplete() {
         board.tileVanishComplete();
+    }
+
+    public void draw(ShapeRenderer shape) {
+        ShapeDrawer.roundRect(shape, x + padding, y + padding, size - (2 * padding), size - (2 * padding), padding * 2, arcShadow(power));
+//        float cornerRadius = padding * 2;
+//        float cornerPoint = midpoint - (2 * cornerRadius);
+//        shape.begin(ShapeRenderer.ShapeType.FilledCircle);
+//        shape.identity();
+//        shape.translate(x + midpoint, y + midpoint, 0);
+//        shape.setColor(arcShadow(power));
+//        shape.filledCircle(-cornerPoint, cornerPoint, cornerRadius);
+//        shape.filledCircle(-cornerPoint, -cornerPoint, cornerRadius);
+//        shape.filledCircle(cornerPoint, cornerPoint, cornerRadius);
+//        shape.filledCircle(cornerPoint, -cornerPoint, cornerRadius);
+//        shape.end();
+//        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
+//        shape.identity();
+//        shape.translate(x + midpoint, y + midpoint, 0);
+//        shape.setColor(arcShadow(power));
+//        shape.filledRect(-cornerPoint - cornerRadius, -cornerPoint, cornerRadius, cornerPoint * 2);
+//        shape.filledRect(-cornerPoint, -cornerPoint - cornerRadius, cornerPoint * 2, (cornerPoint + cornerRadius) * 2);
+//        shape.filledRect(cornerPoint, -cornerPoint, cornerRadius, cornerPoint * 2);
+//        shape.end();
+//        Gdx.gl20.glLineWidth(arcWidth);
     }
 
 }

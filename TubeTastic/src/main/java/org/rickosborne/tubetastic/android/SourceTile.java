@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
@@ -30,14 +31,8 @@ public class SourceTile extends BaseTile {
 
     @Override
     public void draw(ShapeRenderer shape) {
-        shape.begin(ShapeRenderer.ShapeType.FilledCircle);
-        shape.setColor(COLOR_SOURCE);
-        shape.filledCircle(x + midpoint, y + midpoint, midpoint - padding);
-        shape.end();
-        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
-        shape.setColor(COLOR_ARC);
-        shape.filledRect(x + midpoint, y + midpoint - padding, midpoint, padding * 2);
-        shape.end();
+        ShapeDrawer.circle(shape, x + midpoint, y + midpoint, midpoint - (padding * 2), COLOR_SOURCE);
+        ShapeDrawer.line(shape, x + midpoint, y + midpoint, x + size, y + midpoint, arcWidth, COLOR_ARC);
     }
 
 }

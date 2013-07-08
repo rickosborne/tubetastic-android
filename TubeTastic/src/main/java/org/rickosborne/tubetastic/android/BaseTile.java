@@ -39,7 +39,7 @@ public class BaseTile {
     public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
     public static final SparseArray<OutletOffset> outletOffsets;
     public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
-    public static final Color COLOR_POWER_NONE    = null;
+    public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
     public static final Color COLOR_POWER_SOURCED = new Color(1.0f, 0.6f, 0f, 1.0f);
     public static final Color COLOR_POWER_SUNK    = new Color(0f, 0.6f, 1.0f, 1.0f);
 
@@ -108,6 +108,7 @@ public class BaseTile {
     protected float midpoint = 0f;
     protected float alpha = 0f;
     protected float padding = 0;
+    protected float arcWidth = 0;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         init(colNum, rowNum, x, y, size, board);
@@ -168,6 +169,7 @@ public class BaseTile {
         this.x = x;
         this.y = y;
         padding = size / 16f;
+        arcWidth = size / 8f;
     }
 
     public float getX() { return x; }
