@@ -1,5 +1,8 @@
 package org.rickosborne.tubetastic.android;
 
+import android.util.Log;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,17 +16,20 @@ public class GameBoard {
     private int score = 0;
     private float tileSize = 0;
     private boolean ready = false;
+    private int width = 0;
+    private int height = 0;
 
-    public GameBoard(int rowCount, int colCount) {
-        init(rowCount, colCount);
+    public GameBoard(int rowCount, int colCount, int width, int height) {
+        Log.d("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, width, height));
+        init(rowCount, colCount, width, height);
     }
 
-    private void init(int rowCount, int colCount) {
+    private void init(int rowCount, int colCount, int width, int height) {
         this.rowCount = rowCount;
         this.colCount = colCount;
         board = new BaseTile[rowCount][colCount];
         BaseTile tile;
-        resize();
+        resize(width, height);
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
                 if (colNum == 0) {
@@ -43,8 +49,13 @@ public class GameBoard {
         powerSweep();
     }
 
-    public void resize() {
-
+    public void resize(int width, int height) {
+        tileSize = Math.min(width / colCount, height / (rowCount + 1));
+        if ((this.width == width) && (this.height == height)) {
+            return;
+        }
+        this.width = width;
+        this.height = height;
     }
 
     public float xForColNum(int colNum) {
@@ -90,15 +101,15 @@ public class GameBoard {
                 connected.add(tile);
             }
             for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if (!sourced.contains(neighbor)) {
+                if ((neighbor != null) && !sourced.contains(neighbor) && !toCheck.contains(neighbor)) {
                     toCheck.add(neighbor);
                 }
             }
         }
         // then, find all of the sunk tiles that are not sourced
         for (rowNum = lastRowNum; rowNum >= 0; rowNum--) {
-            tile = board[sinkColNum][rowNum];
-            if (!sourced.contains(tile)) {
+            tile = board[rowNum][sinkColNum];
+            if ((tile != null) && !sourced.contains(tile) && !toCheck.contains(tile)) {
                 toCheck.add(tile);
             }
         }
@@ -110,7 +121,7 @@ public class GameBoard {
                 neither.remove(tile);
             }
             for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if (!sourced.contains(neighbor) && !sunk.contains(neighbor)) {
+                if ((neighbor != null) && !sourced.contains(neighbor) && !sunk.contains(neighbor) && !toCheck.contains(neighbor)) {
                     toCheck.add(neighbor);
                 }
             }
@@ -133,7 +144,7 @@ public class GameBoard {
             tile = toCheck.pop();
             connected.add(tile);
             for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if (!connected.contains(neighbor)) {
+                if ((neighbor != null) && !connected.contains(neighbor) && !toCheck.contains(neighbor)) {
                     toCheck.add(neighbor);
                 }
             }
@@ -144,7 +155,7 @@ public class GameBoard {
         }
         points += toVanishCount;
         for (TubeTile vanishTile : toVanish) {
-            // vanishTile.vanish();
+            vanishTile.vanish();
         }
         if (settled) {
             score += points;
@@ -175,6 +186,10 @@ public class GameBoard {
     }
 
     public void readyForSweep() {
+
+    }
+
+    public void draw(SpriteBatch batch) {
 
     }
 

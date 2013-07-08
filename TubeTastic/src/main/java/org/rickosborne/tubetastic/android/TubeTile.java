@@ -6,14 +6,14 @@ import aurelienribon.tweenengine.TweenCallback;
 
 public class TubeTile extends BaseTile {
 
-    private final class OutletProbability {
+    private static final class OutletProbability {
         public double probability;
         public Outlets[] outlets;
-        public void init(double probability, int[] bits) {
+        public OutletProbability(double probability, int[] bits) {
             this.probability = probability;
             this.outlets = new Outlets[bits.length];
             for (int i = 0; i < bits.length; i++) {
-                this.outlets[i].setBits(bits[i]);
+                this.outlets[i] = new Outlets(bits[i]);
             }
         }
         public Outlets getRandomOutlets() {
@@ -28,14 +28,14 @@ public class TubeTile extends BaseTile {
 
     static {
         outletProbabilities = new OutletProbability[4];
-        outletProbabilities[0].init(0.05, new int[]{ Outlets.BIT_NORTH | Outlets.BIT_EAST | Outlets.BIT_SOUTH | Outlets.BIT_WEST });
-        outletProbabilities[1].init(0.50, new int[]{
+        outletProbabilities[0] = new OutletProbability(0.05, new int[]{ Outlets.BIT_NORTH | Outlets.BIT_EAST | Outlets.BIT_SOUTH | Outlets.BIT_WEST });
+        outletProbabilities[1] = new OutletProbability(0.50, new int[]{
             Outlets.BIT_EAST  | Outlets.BIT_SOUTH | Outlets.BIT_WEST,
             Outlets.BIT_NORTH | Outlets.BIT_SOUTH | Outlets.BIT_WEST,
             Outlets.BIT_NORTH | Outlets.BIT_EAST  | Outlets.BIT_WEST,
             Outlets.BIT_NORTH | Outlets.BIT_EAST  | Outlets.BIT_SOUTH
         });
-        outletProbabilities[2].init(0.90, new int[]{
+        outletProbabilities[2] = new OutletProbability(0.90, new int[]{
             Outlets.BIT_NORTH | Outlets.BIT_EAST,
             Outlets.BIT_NORTH | Outlets.BIT_SOUTH,
             Outlets.BIT_NORTH | Outlets.BIT_WEST,
@@ -43,7 +43,7 @@ public class TubeTile extends BaseTile {
             Outlets.BIT_EAST  | Outlets.BIT_WEST,
             Outlets.BIT_SOUTH | Outlets.BIT_WEST,
         });
-        outletProbabilities[3].init(1.00, new int[]{
+        outletProbabilities[3] = new OutletProbability(1.00, new int[]{
             Outlets.BIT_NORTH,
             Outlets.BIT_EAST,
             Outlets.BIT_SOUTH,
