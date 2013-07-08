@@ -4,6 +4,8 @@ import android.util.SparseArray;
 import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +38,10 @@ public class BaseTile {
     public static final SparseArray<String> directionFromDegrees;
     public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
     public static final SparseArray<OutletOffset> outletOffsets;
-    public static final double padding = 1 / 16;
+    public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
+    public static final Color COLOR_POWER_NONE    = null;
+    public static final Color COLOR_POWER_SOURCED = new Color(1.0f, 0.6f, 0f, 1.0f);
+    public static final Color COLOR_POWER_SUNK    = new Color(0f, 0.6f, 1.0f, 1.0f);
 
     static {
         // sweet baby Jesus, Java needs more literals
@@ -80,6 +85,15 @@ public class BaseTile {
         return 0;
     }
 
+    public static Color arcShadow(Power power) {
+        switch (power) {
+            case NONE:    return COLOR_POWER_NONE;
+            case SOURCED: return COLOR_POWER_SOURCED;
+            case SUNK:    return COLOR_POWER_SUNK;
+        }
+        return null;
+    }
+
     protected int colNum = 0;
     protected int rowNum = 0;
     protected float x = 0f;
@@ -93,6 +107,7 @@ public class BaseTile {
     protected int outletRotation = 0;
     protected float midpoint = 0f;
     protected float alpha = 0f;
+    protected float padding = 0;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         init(colNum, rowNum, x, y, size, board);
@@ -150,8 +165,9 @@ public class BaseTile {
 
     protected void resize(float x, float y, float size) {
         midpoint = size * 0.5f;
-        this.x = x + midpoint;
-        this.y = y + midpoint;
+        this.x = x;
+        this.y = y;
+        padding = size / 16f;
     }
 
     public float getX() { return x; }
@@ -170,5 +186,7 @@ public class BaseTile {
         this.rowNum = rowNum;
         this.id = makeId(colNum, rowNum);
     }
+
+    public void draw(ShapeRenderer shape) {}
 
 }

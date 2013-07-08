@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class TubeTasticGame implements ApplicationListener {
 
@@ -17,10 +18,11 @@ public class TubeTasticGame implements ApplicationListener {
     private static final int COUNT_ROWS = 7;
 
     private OrthographicCamera camera;
-    private SpriteBatch batch;
-    private Texture texture;
-    private Sprite sprite;
+//    private SpriteBatch batch;
+//    private Texture texture;
+//    private Sprite sprite;
     private GameBoard board;
+    private ShapeRenderer shapeRenderer;
 
     @Override
     public void create() {
@@ -28,9 +30,9 @@ public class TubeTasticGame implements ApplicationListener {
         float h = Gdx.graphics.getHeight();
         board = new GameBoard(COUNT_COLS, COUNT_ROWS, (int) w, (int) h);
 
-        camera = new OrthographicCamera(1, h/w);
-        batch = new SpriteBatch();
-
+//        camera = new OrthographicCamera(1, h/w);
+        shapeRenderer = new ShapeRenderer();
+//        batch = new SpriteBatch();
 //        texture = new Texture(Gdx.files.internal("data/libgdx.png"));
 //        texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 //        TextureRegion region = new TextureRegion(texture, 0, 0, 512, 275);
@@ -42,8 +44,9 @@ public class TubeTasticGame implements ApplicationListener {
 
     @Override
     public void dispose() {
-        batch.dispose();
-        texture.dispose();
+        shapeRenderer.dispose();
+//        batch.dispose();
+//        texture.dispose();
     }
 
     @Override
@@ -51,17 +54,18 @@ public class TubeTasticGame implements ApplicationListener {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         // Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
+        camera.update();
+        shapeRenderer.setProjectionMatrix(camera.combined);
         // sprite.draw(batch);
-        board.draw(batch);
-        batch.end();
+        board.draw(shapeRenderer);
     }
 
     @Override
     public void resize(int width, int height) {
         board.resize(width, height);
+        camera = new OrthographicCamera(width, height);
+        camera.position.set(width / 2, height / 2, 0);
+        camera.update();
     }
 
     @Override
