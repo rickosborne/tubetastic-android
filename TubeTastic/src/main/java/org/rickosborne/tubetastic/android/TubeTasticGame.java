@@ -46,8 +46,10 @@ public class TubeTasticGame implements ApplicationListener {
     public void render() {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        stage.act(Gdx.graphics.getDeltaTime());
+        float delta = Gdx.graphics.getDeltaTime();
+        stage.act(delta);
         stage.draw();
+        TweenManagers.manager.update(delta);
     }
 
     @Override

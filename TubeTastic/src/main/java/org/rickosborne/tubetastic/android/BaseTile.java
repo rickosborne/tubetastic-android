@@ -8,6 +8,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,7 +105,7 @@ public class BaseTile extends Actor {
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
     protected float scale = 1f;
-    protected float rotation = 0f;
+//    protected float rotation = 0f;
     protected int outletRotation = 0;
     protected float midpoint = 0f;
     protected float alpha = 0f;
@@ -181,14 +182,14 @@ public class BaseTile extends Actor {
 
 //    public float getX() { return x; }
 //    public float getY() { return y; }
-    public float getRotation() { return rotation; }
+//    public float getRotation() { return rotation; }
 //    public float getSize() { return size; }
     public float getAlpha() { return alpha; }
     public float getScale() { return scale; }
 
 //    public void setX(float x) { this.x = x; }
 //    public void setY(float y) { this.y = y; }
-    public void setRotation(float rotation) { this.rotation = rotation; }
+//    public void setRotation(float rotation) { this.rotation = rotation; }
 //    public void setSize(float size) { this.size = size; }
     public void setScale(float scale) { this.scale = scale; }
     public void setAlpha(float alpha) { this.alpha = alpha; }

@@ -5,6 +5,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Group;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ public class GameBoard extends Group {
         settled = false;
         score = 0;
         setTransform(false);
+        setTouchable(Touchable.enabled);
         powerSweep();
     }
 
@@ -57,8 +60,7 @@ public class GameBoard extends Group {
             return;
         }
         tileSize = Math.min(maxWidth / colCount, maxHeight / (rowCount + 1));
-        setWidth(Math.round(colCount * tileSize));
-        setHeight(Math.round((rowCount + 1) * tileSize));
+        setSize(Math.round(colCount * tileSize), Math.round((rowCount + 1) * tileSize));
         setPosition((maxWidth - (tileSize * colCount)) / 2, (maxHeight - (tileSize * (rowCount + 1))) / 2);
     }
 
@@ -67,7 +69,7 @@ public class GameBoard extends Group {
     }
 
     public float yForRowNum(int rowNum) {
-        return ((rowNum + 1) * tileSize);
+        return ((rowCount - rowNum) * tileSize);
     }
 
     private void powerSweep() {
@@ -200,11 +202,6 @@ public class GameBoard extends Group {
         shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);
         shape.filledRect(getX(), getY(), getWidth(), getHeight());
         shape.end();
-//        for (BaseTile[] row : board) {
-//            for (BaseTile tile : row) {
-//                tile.draw(shape);
-//            }
-//        }
         batch.begin();
         super.draw(batch, parentAlpha);
     }

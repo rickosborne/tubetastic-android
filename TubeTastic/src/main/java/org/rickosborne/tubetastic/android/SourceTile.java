@@ -32,7 +32,6 @@ public class SourceTile extends BaseTile {
 
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
-        Gdx.app.log(String.format("SourceTile %d,%d", colNum, rowNum), String.format("draw @(%.0f,%.0f)", getX(), getY()));
         batch.end();
         ShapeRenderer shape = new ShapeRenderer();
         float x = getX();

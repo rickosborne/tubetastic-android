@@ -7,6 +7,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 
 import java.util.ArrayList;
 
@@ -128,7 +131,7 @@ public class TubeTile extends BaseTile {
     }
 
     @Override
-    public void init(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
+    public void init(int colNum, int rowNum, float x, float y, float size, final GameBoard board) {
         super.init(colNum, rowNum, x, y, size, board);
         double prob = RandomService.getRandom().nextDouble();
         for (OutletProbability outletProb : outletProbabilities) {
@@ -138,26 +141,43 @@ public class TubeTile extends BaseTile {
             }
         }
         resize(x, y, size);
+        addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                TubeTile tile = (TubeTile) event.getTarget();
+                Gdx.app.log(String.format("TubeTile %d,%d", tile.colNum, tile.rowNum), String.format("touch boardReady:%b tileReady:%b remain:%d", tile.board.isReady(), tile.ready, tile.spinRemain));
+                if (tile.board.isReady()) {
+                    tile.spinRemain++;
+                    if (tile.ready) {
+                        tile.spin();
+                    }
+                }
+                return true;
+            }
+        });
+        setTouchable(Touchable.enabled);
         ready = true;
     }
 
-    @Override
-    public void resize(float x, float y, float size) {
-        super.resize(x, y, size);
-    }
+//    @Override
+//    public void resize(float x, float y, float size) {
+//        super.resize(x, y, size);
+//    }
 
     @Override
     public void setPower(Power power) {
         if (power == this.power) {
             return;
         }
-        // ...
+        this.power = power;
+        // ... animate
     }
 
     public void setBits(int bits) { outlets.setBits(bits); }
     public void setReady(boolean ready) { this.ready = ready; }
 
     public void spin() {
+        Gdx.app.log(String.format("TubeTile %d,%d", colNum, rowNum), String.format("spin remain:%d", spinRemain));
         final TubeTile self = this;
         TweenCallback onComplete = new TweenCallback() {
             @Override
@@ -167,6 +187,7 @@ public class TubeTile extends BaseTile {
                 }
             }
         };
+        float rotation = getRotation();
         if (spinRemain > 0) {
             ready = false;
             spinRemain--;
