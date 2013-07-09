@@ -1,14 +1,16 @@
 package org.rickosborne.tubetastic.android;
 
 import android.util.Log;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.Group;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class GameBoard {
+public class GameBoard extends Group {
 
     private int rowCount = 0;
     private int colCount = 0;
@@ -17,24 +19,18 @@ public class GameBoard {
     private int score = 0;
     private float tileSize = 0;
     private boolean ready = false;
-    private int width = 0;
-    private int height = 0;
-    private int boardWidth = 0;
-    private int boardHeight = 0;
-    private float x = 0;
-    private float y = 0;
 
-    public GameBoard(int rowCount, int colCount, int width, int height) {
-        Log.d("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, width, height));
-        init(rowCount, colCount, width, height);
+    public GameBoard(int rowCount, int colCount, int maxWidth, int maxHeight) {
+        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
+        init(rowCount, colCount, maxWidth, maxHeight);
     }
 
-    private void init(int rowCount, int colCount, int width, int height) {
+    private void init(int rowCount, int colCount, int maxWidth, int maxHeight) {
         this.rowCount = rowCount;
         this.colCount = colCount;
         board = new BaseTile[rowCount][colCount];
         BaseTile tile;
-        resize(width, height);
+        resizeToMax(maxWidth, maxHeight);
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
                 if (colNum == 0) {
@@ -47,33 +43,31 @@ public class GameBoard {
                     tile = new TubeTile(colNum, rowNum, xForColNum(colNum), yForRowNum(rowNum), tileSize, this);
                 }
                 board[rowNum][colNum] = tile;
+                addActor(tile);
             }
         }
         settled = false;
         score = 0;
+        setTransform(false);
         powerSweep();
     }
 
-    public void resize(int width, int height) {
-        if ((this.width == width) && (this.height == height)) {
+    public void resizeToMax(int maxWidth, int maxHeight) {
+        if ((getWidth() == maxWidth) && (getHeight() == maxHeight)) {
             return;
         }
-        this.width = width;
-        this.height = height;
-        tileSize = Math.min(width / colCount, height / (rowCount + 1));
-        x = (int) ((width - (tileSize * colCount)) / 2);
-        y = (int) ((height - (tileSize * (rowCount + 1))) / 2);
-        boardWidth = Math.round(colCount * tileSize);
-        boardHeight = Math.round((rowCount + 1) * tileSize);
-        Log.d("GameBoard", String.format("resize w:%d h:%d x:%.2f y:%.2f size:%.2f", width, height, x, y, tileSize));
+        tileSize = Math.min(maxWidth / colCount, maxHeight / (rowCount + 1));
+        setWidth(Math.round(colCount * tileSize));
+        setHeight(Math.round((rowCount + 1) * tileSize));
+        setPosition((maxWidth - (tileSize * colCount)) / 2, (maxHeight - (tileSize * (rowCount + 1))) / 2);
     }
 
     public float xForColNum(int colNum) {
-        return x + (colNum * tileSize);
+        return (colNum * tileSize);
     }
 
     public float yForRowNum(int rowNum) {
-        return y + ((rowNum + 1) * tileSize);
+        return ((rowNum + 1) * tileSize);
     }
 
     private void powerSweep() {
@@ -198,22 +192,21 @@ public class GameBoard {
 
     }
 
-    public void draw(ShapeRenderer shape) {
+    public void draw(SpriteBatch batch, float parentAlpha) {
+        batch.end();
+        ShapeRenderer shape = new ShapeRenderer();
         shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
         shape.identity();
         shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);
-        shape.filledRect(x, y, boardWidth, boardHeight);
+        shape.filledRect(getX(), getY(), getWidth(), getHeight());
         shape.end();
-        for (BaseTile[] row : board) {
-            for (BaseTile tile : row) {
-                tile.draw(shape);
-            }
-        }
-//        shape.begin(ShapeRenderer.ShapeType.FilledCircle);
-//        shape.identity();
-//        shape.setColor(0.25f, 0.25f, 0.25f, 1.0f);
-//        shape.filledCircle(x + boardWidth / 2, y + boardHeight / 2, Math.min(boardWidth, boardHeight) / 2);
-//        shape.end();
+//        for (BaseTile[] row : board) {
+//            for (BaseTile tile : row) {
+//                tile.draw(shape);
+//            }
+//        }
+        batch.begin();
+        super.draw(batch, parentAlpha);
     }
 
 }

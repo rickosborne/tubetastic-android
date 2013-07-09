@@ -4,14 +4,16 @@ import android.util.SparseArray;
 import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class BaseTile {
+public class BaseTile extends Actor {
 
     private static final class OutletOffset {
         public int col = 0;
@@ -29,6 +31,7 @@ public class BaseTile {
     public static final String DIRECTION_EAST = "E";
     public static final String DIRECTION_WEST = "W";
     public static final int DEGREES_NORTH =   0;
+    public static final int DEGREES_NORTH2 = 360;
     public static final int DEGREES_EAST  =  90;
     public static final int DEGREES_SOUTH = 180;
     public static final int DEGREES_WEST  = 270;
@@ -96,13 +99,11 @@ public class BaseTile {
 
     protected int colNum = 0;
     protected int rowNum = 0;
-    protected float x = 0f;
-    protected float y = 0f;
-    protected float size = 0f;
     protected GameBoard board = null;
     protected Power power = Power.NONE;
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
+    protected float scale = 1f;
     protected float rotation = 0f;
     protected int outletRotation = 0;
     protected float midpoint = 0f;
@@ -111,15 +112,18 @@ public class BaseTile {
     protected float arcWidth = 0;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
+        Gdx.app.log(this.getClass().getSimpleName(), String.format("col:%d row%d x:%.0f y:%.0f size:%.0f", colNum, rowNum, x, y, size));
         init(colNum, rowNum, x, y, size, board);
     }
 
     protected void init(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         this.colNum = colNum;
         this.rowNum = rowNum;
-        this.x = x;
-        this.y = y;
-        this.size = size;
+//        this.x = x;
+//        this.y = y;
+//        this.size = size;
+//        this.width = size;
+//        this.height = size;
         this.board = board;
         this.id = makeId(colNum, rowNum);
         this.resize(x, y, size);
@@ -166,22 +170,27 @@ public class BaseTile {
 
     protected void resize(float x, float y, float size) {
         midpoint = size * 0.5f;
-        this.x = x;
-        this.y = y;
+        setBounds(x, y, size, size);
+//        this.x = x;
+//        this.y = y;
+//        this.width = size;
+//        this.height = size;
         padding = size / 16f;
-        arcWidth = size / 8f;
+        arcWidth = size / 12f;
     }
 
-    public float getX() { return x; }
-    public float getY() { return y; }
+//    public float getX() { return x; }
+//    public float getY() { return y; }
     public float getRotation() { return rotation; }
-    public float getSize() { return size; }
+//    public float getSize() { return size; }
     public float getAlpha() { return alpha; }
+    public float getScale() { return scale; }
 
-    public void setX(float x) { this.x = x; }
-    public void setY(float y) { this.y = y; }
+//    public void setX(float x) { this.x = x; }
+//    public void setY(float y) { this.y = y; }
     public void setRotation(float rotation) { this.rotation = rotation; }
-    public void setSize(float size) { this.size = size; }
+//    public void setSize(float size) { this.size = size; }
+    public void setScale(float scale) { this.scale = scale; }
     public void setAlpha(float alpha) { this.alpha = alpha; }
     public void setColRow(int colNum, int rowNum) {
         this.colNum = colNum;
@@ -189,6 +198,6 @@ public class BaseTile {
         this.id = makeId(colNum, rowNum);
     }
 
-    public void draw(ShapeRenderer shape) {}
+//    public void draw(ShapeRenderer shape) {}
 
 }

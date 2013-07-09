@@ -4,7 +4,9 @@ import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.ArrayList;
 
@@ -112,9 +114,9 @@ public class TubeTile extends BaseTile {
         outletPathLines[5] = new OutletPathLine(0, Outlets.BIT_WEST , -1, 0, -OFFSET_SINGLE, 0);
         outletPathArcs = new OutletPathArc[4];
         outletPathArcs[0] = new OutletPathArc(Outlets.BIT_NORTH, Outlets.BIT_EAST ,  1,  1, 1, DEGREES_SOUTH, DEGREES_WEST );
-        outletPathArcs[1] = new OutletPathArc(Outlets.BIT_EAST,  Outlets.BIT_SOUTH,  1, -1, 1, DEGREES_WEST , DEGREES_NORTH);
-        outletPathArcs[2] = new OutletPathArc(Outlets.BIT_SOUTH, Outlets.BIT_WEST,  -1, -1, 1, DEGREES_NORTH, DEGREES_EAST);
-        outletPathArcs[3] = new OutletPathArc(Outlets.BIT_WEST , Outlets.BIT_NORTH, -1,  1, 1, DEGREES_EAST,  DEGREES_SOUTH);
+        outletPathArcs[1] = new OutletPathArc(Outlets.BIT_EAST,  Outlets.BIT_SOUTH,  1, -1, 1, DEGREES_EAST, DEGREES_SOUTH);
+        outletPathArcs[2] = new OutletPathArc(Outlets.BIT_SOUTH, Outlets.BIT_WEST,  -1, -1, 1, DEGREES_EAST, DEGREES_NORTH);
+        outletPathArcs[3] = new OutletPathArc(Outlets.BIT_WEST , Outlets.BIT_NORTH, -1,  1, 1, DEGREES_NORTH2, DEGREES_EAST);
     }
 
     private int spinRemain = 0;
@@ -238,8 +240,7 @@ public class TubeTile extends BaseTile {
             ;
         }
         else {
-            this.x = x + this.midpoint;
-            this.y = y + this.midpoint;
+            setPosition(x + this.midpoint, y + this.midpoint);
             onComplete.onEvent(TweenCallback.COMPLETE, null);
         }
     }
@@ -252,8 +253,15 @@ public class TubeTile extends BaseTile {
         board.tileVanishComplete();
     }
 
-    public void draw(ShapeRenderer shape) {
-        ShapeDrawer.roundRect(shape, x + padding, y + padding, size - (2 * padding), size - (2 * padding), padding * 2, arcShadow(power));
+    @Override
+    public void draw(SpriteBatch batch, float parentAlpha) {
+        batch.end();
+        ShapeRenderer shape = new ShapeRenderer();
+        float x = getX();
+        float y = getY();
+        float width = getWidth();
+        float height = getHeight();
+        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, arcShadow(power));
         ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
         float midX = x + midpoint;
         float midY = y + midpoint;
@@ -275,6 +283,7 @@ public class TubeTile extends BaseTile {
         if (arcs.size() > 0) {
             ShapeDrawer.renderArcSegments(shape, arcs, COLOR_ARC, arcWidth);
         }
+        batch.begin();
     }
 
 }

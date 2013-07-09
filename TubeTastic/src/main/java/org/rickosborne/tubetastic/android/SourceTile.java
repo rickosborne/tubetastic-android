@@ -2,6 +2,7 @@ package org.rickosborne.tubetastic.android;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class SourceTile extends BaseTile {
@@ -30,9 +31,16 @@ public class SourceTile extends BaseTile {
     public void setPower(Power power) {}
 
     @Override
-    public void draw(ShapeRenderer shape) {
+    public void draw(SpriteBatch batch, float parentAlpha) {
+        Gdx.app.log(String.format("SourceTile %d,%d", colNum, rowNum), String.format("draw @(%.0f,%.0f)", getX(), getY()));
+        batch.end();
+        ShapeRenderer shape = new ShapeRenderer();
+        float x = getX();
+        float y = getY();
+        float width = getWidth();
         ShapeDrawer.circle(shape, x + midpoint, y + midpoint, midpoint - (padding * 2), COLOR_SOURCE);
-        ShapeDrawer.line(shape, x + midpoint, y + midpoint, x + size, y + midpoint, arcWidth, COLOR_ARC);
+        ShapeDrawer.line(shape, x + midpoint, y + midpoint, x + width, y + midpoint, arcWidth, COLOR_ARC);
+        batch.begin();
     }
 
 }
