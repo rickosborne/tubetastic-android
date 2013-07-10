@@ -37,8 +37,9 @@ public class SourceTile extends BaseTile {
         float x = getX();
         float y = getY();
         float width = getWidth();
-        ShapeDrawer.circle(shape, x + midpoint, y + midpoint, midpoint - (padding * 2), COLOR_SOURCE);
-        ShapeDrawer.line(shape, x + midpoint, y + midpoint, x + width, y + midpoint, arcWidth, COLOR_ARC);
+        float degrees = getRotation();
+        ShapeDrawer.circle(shape, midpoint, midpoint, midpoint - (padding * 2), COLOR_SOURCE, degrees, x, y);
+        ShapeDrawer.line(shape, midpoint, midpoint, width, midpoint, arcWidth, COLOR_ARC, degrees, x, y);
         batch.begin();
     }
 

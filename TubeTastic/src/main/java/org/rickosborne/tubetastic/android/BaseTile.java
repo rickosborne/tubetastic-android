@@ -105,7 +105,6 @@ public class BaseTile extends Actor {
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
     protected float scale = 1f;
-//    protected float rotation = 0f;
     protected int outletRotation = 0;
     protected float midpoint = 0f;
     protected float alpha = 0f;
@@ -113,6 +112,7 @@ public class BaseTile extends Actor {
     protected float arcWidth = 0;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
+        super();
         Gdx.app.log(this.getClass().getSimpleName(), String.format("col:%d row%d x:%.0f y:%.0f size:%.0f", colNum, rowNum, x, y, size));
         init(colNum, rowNum, x, y, size, board);
     }
@@ -120,14 +120,13 @@ public class BaseTile extends Actor {
     protected void init(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         this.colNum = colNum;
         this.rowNum = rowNum;
-//        this.x = x;
-//        this.y = y;
-//        this.size = size;
-//        this.width = size;
-//        this.height = size;
-        this.board = board;
         this.id = makeId(colNum, rowNum);
+        this.board = board;
         this.resize(x, y, size);
+    }
+
+    public String toString() {
+        return String.format("%s %d,%d (%.0f,%.0f/%.0fx%.0f)", getClass().getSimpleName(), colNum, rowNum, getX(), getY(), getWidth(), getHeight());
     }
 
     public boolean hasOutletTo(int degrees) {
@@ -172,25 +171,12 @@ public class BaseTile extends Actor {
     protected void resize(float x, float y, float size) {
         midpoint = size * 0.5f;
         setBounds(x, y, size, size);
-//        this.x = x;
-//        this.y = y;
-//        this.width = size;
-//        this.height = size;
         padding = size / 16f;
         arcWidth = size / 12f;
     }
 
-//    public float getX() { return x; }
-//    public float getY() { return y; }
-//    public float getRotation() { return rotation; }
-//    public float getSize() { return size; }
     public float getAlpha() { return alpha; }
     public float getScale() { return scale; }
-
-//    public void setX(float x) { this.x = x; }
-//    public void setY(float y) { this.y = y; }
-//    public void setRotation(float rotation) { this.rotation = rotation; }
-//    public void setSize(float size) { this.size = size; }
     public void setScale(float scale) { this.scale = scale; }
     public void setAlpha(float alpha) { this.alpha = alpha; }
     public void setColRow(int colNum, int rowNum) {
@@ -198,7 +184,5 @@ public class BaseTile extends Actor {
         this.rowNum = rowNum;
         this.id = makeId(colNum, rowNum);
     }
-
-//    public void draw(ShapeRenderer shape) {}
 
 }

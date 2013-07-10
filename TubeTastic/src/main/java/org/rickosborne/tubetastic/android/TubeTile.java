@@ -1,15 +1,19 @@
 package org.rickosborne.tubetastic.android;
 
+import android.util.Log;
 import aurelienribon.tweenengine.BaseTween;
 import aurelienribon.tweenengine.Tween;
 import aurelienribon.tweenengine.TweenCallback;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction;
 
 import java.util.ArrayList;
 
@@ -53,8 +57,8 @@ public class TubeTile extends BaseTile {
             this.x2 = x2;
             this.y2 = y2;
         }
-        public ShapeDrawer.LineSegmentLine segment(float size, float cx, float cy) {
-            return new ShapeDrawer.LineSegmentLine(cx + size * x1, cy + size * y1, cx + size * x2, cy + size * y2);
+        public ShapeDrawer.LineSegmentLine segment(float size) {
+            return new ShapeDrawer.LineSegmentLine(size * x1, size * y1, size * x2, size * y2);
         }
     }
 
@@ -72,8 +76,8 @@ public class TubeTile extends BaseTile {
             this.a1 = startDegrees * DEGREES_TO_RADIANS;
             this.a2 = endDegrees * DEGREES_TO_RADIANS;
         }
-        public ShapeDrawer.LineSegmentArc segment(float size, float cx, float cy) {
-            return new ShapeDrawer.LineSegmentArc(cx + size * x, cy + size * y, size * r, a1, a2);
+        public ShapeDrawer.LineSegmentArc segment(float size) {
+            return new ShapeDrawer.LineSegmentArc(size * x, size * y, size * r, a1, a2);
         }
     }
 
@@ -131,6 +135,17 @@ public class TubeTile extends BaseTile {
     }
 
     @Override
+    public String toString() {
+        return String.format("%s %s%s%s%s",
+                super.toString(),
+                hasOutletTo(DEGREES_NORTH) ? "N" : "-",
+                hasOutletTo(DEGREES_EAST)  ? "E" : "-",
+                hasOutletTo(DEGREES_SOUTH) ? "S" : "-",
+                hasOutletTo(DEGREES_WEST)  ? "W" : "-"
+        );
+    }
+
+    @Override
     public void init(int colNum, int rowNum, float x, float y, float size, final GameBoard board) {
         super.init(colNum, rowNum, x, y, size, board);
         double prob = RandomService.getRandom().nextDouble();
@@ -141,28 +156,51 @@ public class TubeTile extends BaseTile {
             }
         }
         resize(x, y, size);
-        addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                TubeTile tile = (TubeTile) event.getTarget();
-                Gdx.app.log(String.format("TubeTile %d,%d", tile.colNum, tile.rowNum), String.format("touch boardReady:%b tileReady:%b remain:%d", tile.board.isReady(), tile.ready, tile.spinRemain));
-                if (tile.board.isReady()) {
-                    tile.spinRemain++;
-                    if (tile.ready) {
-                        tile.spin();
-                    }
-                }
-                return true;
-            }
-        });
+        final TubeTile self = this;
+//        addListener(new InputListener() {
+//            @Override
+//            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+//                Gdx.app.log("TubeTile", "touchDown");
+//                try {
+//                if (!event.isHandled()) {
+//                    TubeTile tile = (TubeTile) event.getTarget();
+////                    TubeTile tile = self;
+//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
+//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), String.format("touchDown boardReady:%b tileReady:%b remain:%d handled:%b", tile.board.isReady(), tile.ready, tile.spinRemain, event.isHandled()));
+//                    if (tile.board.isReady()) {
+//                        tile.spinRemain++;
+//                        if (tile.ready) {
+//                            tile.spin();
+//                        }
+//                    }
+////                event.stop();
+//                }
+//                }
+//                catch (Exception e) {
+//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
+//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), "touch exception:" + e.toString());
+//                }
+//                return true;
+//            }
+//
+//            @Override
+//            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+////                TubeTile tile = (TubeTile) event.getTarget();
+//                try {
+//                    TubeTile tile = self;
+//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
+//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), String.format("touchUp boardReady:%b tileReady:%b remain:%d handled:%b", tile.board.isReady(), tile.ready, tile.spinRemain, event.isHandled()));
+//                }
+//                catch (Exception e) {
+//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
+//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), "touch exception:" + e.toString());
+//                }
+//            }
+//        });
         setTouchable(Touchable.enabled);
+//        setTouchable(Touchable.disabled);
         ready = true;
     }
-
-//    @Override
-//    public void resize(float x, float y, float size) {
-//        super.resize(x, y, size);
-//    }
 
     @Override
     public void setPower(Power power) {
@@ -177,92 +215,83 @@ public class TubeTile extends BaseTile {
     public void setReady(boolean ready) { this.ready = ready; }
 
     public void spin() {
-        Gdx.app.log(String.format("TubeTile %d,%d", colNum, rowNum), String.format("spin remain:%d", spinRemain));
+        Gdx.app.log(toString(), String.format("spin remain:%d", spinRemain));
         final TubeTile self = this;
-        TweenCallback onComplete = new TweenCallback() {
-            @Override
-            public void onEvent(int type, BaseTween<?> source) {
-                if (type == TweenCallback.COMPLETE) {
-                    self.spin();
-                }
-            }
-        };
-        float rotation = getRotation();
         if (spinRemain > 0) {
             ready = false;
             spinRemain--;
             setPower(Power.NONE);
-            Tween
-                .to(this, BaseTileTweener.ROTATION, DURATION_SPIN)
-                .setCallback(onComplete)
-                .setCallbackTriggers(TweenCallback.COMPLETE)
-                .target(rotation + 90)
-                .start(TweenManagers.manager)
-            ;
+            addAction(Actions.sequence(
+                    Actions.rotateBy(90, DURATION_SPIN),
+                    Actions.run(new Runnable() {
+                        @Override
+                        public void run() {
+                            Gdx.app.log(self.toString(), String.format("spunTo r:%.0f x:%.0f y:%.0f w:%.0f h:%.0f", self.getRotation(), self.getX(), self.getY(), self.getWidth(), self.getHeight()));
+                            self.spin();
+                        }
+                    })
+            ));
             board.interruptSweep();
         }
         else {
+            float rotation = getRotation();
+            Gdx.app.log(toString(), String.format("done spinning to:%.2f", rotation));
             if (rotation > 360) {
                 rotation %= 360;
+                setRotation(rotation);
             }
             outletRotation = (int) rotation;
             ready = true;
-            board.readyForSweep();
+            // board.readyForSweep();
         }
     }
 
     public void vanish() {
         ready = false;
         setPower(Power.NONE);
-        final TubeTile self = this;
-        TweenCallback onComplete = new TweenCallback() {
-            @Override
-            public void onEvent(int type, BaseTween<?> source) {
-                if (type == TweenCallback.COMPLETE) {
-                    self.onVanishComplete();
-                }
-            }
-        };
         if (board.isSettled()) {
-            Tween
-                .to(this, BaseTileTweener.ALPHA, DURATION_VANISH)
-                .setCallback(onComplete)
-                .setCallbackTriggers(TweenCallback.COMPLETE)
-                .target(0)
-                .start(TweenManagers.manager)
-            ;
+            final TubeTile self = this;
+            addAction(Actions.sequence(
+                    Actions.alpha(0, DURATION_VANISH),
+                    Actions.run(new Runnable() {
+                        @Override
+                        public void run() {
+                            Gdx.app.log(self.toString(), "vanished");
+                            self.onVanishComplete();
+                        }
+                    })
+            ));
         }
         else {
-            onComplete.onEvent(TweenCallback.COMPLETE, null);
+            Gdx.app.log(toString(), "auto-vanished");
+            onVanishComplete();
         }
     }
 
-    public void dropTo(final int colNum, final int rowNum, float x, float y) {
+    public void dropTo(final int colNum, final int rowNum, final float x, final float y) {
         ready = false;
         setPower(Power.NONE);
         final TubeTile self = this;
-        TweenCallback onComplete = new TweenCallback() {
-            @Override
-            public void onEvent(int type, BaseTween<?> source) {
-                if (type == TweenCallback.COMPLETE) {
-                    self.setColRow(colNum, rowNum);
-                    self.onDropComplete();
-                    self.setReady(true);
-                }
-            }
-        };
         if (board.isSettled()) {
-            Tween
-                .to(this, BaseTileTweener.X | BaseTileTweener.Y, DURATION_DROP)
-                .setCallback(onComplete)
-                .setCallbackTriggers(TweenCallback.COMPLETE)
-                .target(x, y)
-                .start(TweenManagers.manager)
-            ;
+            addAction(Actions.sequence(
+                    Actions.moveTo(x, y, DURATION_DROP),
+                    Actions.run(new Runnable() {
+                        @Override
+                        public void run() {
+                            Gdx.app.log(self.toString(), String.format("droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+                            self.setColRow(colNum, rowNum);
+                            self.onDropComplete();
+                            self.setReady(true);
+                        }
+                    })
+            ));
         }
         else {
-            setPosition(x + this.midpoint, y + this.midpoint);
-            onComplete.onEvent(TweenCallback.COMPLETE, null);
+            Gdx.app.log(self.toString(), String.format("auto-droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+            setPosition(x, y);
+            setColRow(colNum, rowNum);
+            onDropComplete();
+            setReady(true);
         }
     }
 
@@ -282,29 +311,54 @@ public class TubeTile extends BaseTile {
         float y = getY();
         float width = getWidth();
         float height = getHeight();
-        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, arcShadow(power));
+        Color backColor = arcShadow(power).cpy();
+        float alpha = getAlpha();
+        float degrees = getRotation();
+        backColor.a = alpha;
+        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees);
         ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
         float midX = x + midpoint;
         float midY = y + midpoint;
         int bits = outlets.getBits();
         for (OutletPathLine line : outletPathLines) {
             if (((line.fromBit == 0) && (bits == line.toBit)) || (((bits & line.fromBit) != 0) && ((bits & line.toBit) != 0))) {
-                lines.add(line.segment(midpoint, midX, midY));
+                lines.add(line.segment(midpoint));
             }
         }
+        Color arcColor = COLOR_ARC.cpy();
+        arcColor.a = alpha;
         if (lines.size() > 0) {
-            ShapeDrawer.renderLineSegments(shape, lines, COLOR_ARC, arcWidth);
+            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY);
         }
         ArrayList<ShapeDrawer.LineSegmentArc> arcs = new ArrayList<ShapeDrawer.LineSegmentArc>(outletPathArcs.length);
         for (OutletPathArc arc : outletPathArcs) {
             if (((bits & arc.fromBit) != 0) && ((bits & arc.toBit) != 0)) {
-                arcs.add(arc.segment(midpoint, midX, midY));
+                arcs.add(arc.segment(midpoint));
             }
         }
         if (arcs.size() > 0) {
-            ShapeDrawer.renderArcSegments(shape, arcs, COLOR_ARC, arcWidth);
+            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY);
         }
         batch.begin();
+    }
+
+    /*
+    @Override
+    public Actor hit (float x, float y, boolean touchable) {
+        Actor target = super.hit(x, y, touchable);
+        Gdx.app.log(toString(), String.format("hit x:%.0f y:%.0f t:%b %s", x, y, touchable, target != null ? "!!!!!" : ""));
+        return target;
+    }
+    */
+
+    public void onTouchDown() {
+        Gdx.app.log(toString(), String.format("touchDown boardReady:%b tileReady:%b remain:%d", board.isReady(), ready, spinRemain));
+        if (board.isReady()) {
+            spinRemain++;
+            if (ready) {
+                spin();
+            }
+        }
     }
 
 }

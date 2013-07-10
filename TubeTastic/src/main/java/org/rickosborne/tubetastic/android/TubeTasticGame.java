@@ -49,7 +49,6 @@ public class TubeTasticGame implements ApplicationListener {
         float delta = Gdx.graphics.getDeltaTime();
         stage.act(delta);
         stage.draw();
-        TweenManagers.manager.update(delta);
     }
 
     @Override

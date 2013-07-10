@@ -36,8 +36,9 @@ public class SinkTile extends BaseTile {
         ShapeRenderer shape = new ShapeRenderer();
         float x = getX();
         float y = getY();
-        ShapeDrawer.circle(shape, x + midpoint, y + midpoint, midpoint - (padding * 2), COLOR_SINK);
-        ShapeDrawer.line(shape, x, y + midpoint, x + midpoint, y + midpoint, arcWidth, COLOR_ARC);
+        float degrees = getRotation();
+        ShapeDrawer.circle(shape, midpoint, midpoint, midpoint - (padding * 2), COLOR_SINK, degrees, x, y);
+        ShapeDrawer.line(shape, 0, midpoint, midpoint, midpoint, arcWidth, COLOR_ARC, degrees, x, y);
         batch.begin();
     }
 
