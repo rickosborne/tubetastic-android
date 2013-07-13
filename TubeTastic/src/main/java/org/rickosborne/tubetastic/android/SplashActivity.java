@@ -16,16 +16,14 @@ public class SplashActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.splash_activity);
-        ScoreKeeper scoreKeeper = new ScoreKeeper(getApplicationContext());
-        int highScore = scoreKeeper.getHighScore();
-        if (highScore > 0) {
-            String scoreTemplate = getString(R.string.high_score);
-            String scoreText = String.format(scoreTemplate, highScore);
-            FontableTextView scoreView = (FontableTextView) findViewById(R.id.splash_score);
-            scoreView.setText(scoreText);
-        }
+        updateScore();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateScore();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -37,6 +35,20 @@ public class SplashActivity extends Activity {
     public void onNewGame (View sender) {
         Intent i = new Intent(this, GameActivity.class);
         startActivity(i);
+    }
+
+    private void updateScore() {
+        int highScore = (new ScoreKeeper(getApplicationContext())).getHighScore();
+        if (highScore > 0) {
+            String scoreTemplate = getString(R.string.high_score);
+            if (scoreTemplate != null) {
+                String scoreText = String.format(scoreTemplate, highScore);
+                FontableTextView scoreView = (FontableTextView) findViewById(R.id.splash_score);
+                if (scoreView != null) {
+                    scoreView.setText(scoreText);
+                }
+            }
+        }
     }
     
 }

@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import android.content.Context;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL10;
@@ -18,6 +19,7 @@ public class TubeTasticGame implements ApplicationListener {
     private GameBoard board;
     private ShapeRenderer shapeRenderer;
     private Stage stage;
+    private Context appContext;
 
     @Override
     public void create() {
@@ -42,6 +44,7 @@ public class TubeTasticGame implements ApplicationListener {
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
         board = new GameBoard(COUNT_COLS, COUNT_ROWS, (int) w, (int) h);
+        board.setScoreKeeper(new ScoreKeeper(appContext));
         stage = new Stage(w, h, true);
         Gdx.input.setInputProcessor(stage);
         stage.addActor(board);
@@ -74,5 +77,7 @@ public class TubeTasticGame implements ApplicationListener {
     @Override
     public void resume() {
     }
+
+    public void setAppContext(Context context) { this.appContext = context; }
 
 }

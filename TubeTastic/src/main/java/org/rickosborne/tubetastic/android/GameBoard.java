@@ -26,6 +26,7 @@ public class GameBoard extends Group {
     private final float SCORE_HEIGHT = 0.08f;
     private float scoreHeight = 0;
     private ScoreActor scoreBoard;
+    private ScoreKeeper scoreKeeper;
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
@@ -168,6 +169,8 @@ public class GameBoard extends Group {
             if (settled) {
 //                Gdx.app.log("GameBoard", String.format("score %d + %d", score, sweeper.vanished.size()));
                 score += sweeper.vanished.size();
+                scoreBoard.setScore(score);
+                scoreKeeper.addScore(score);
             }
         }
     }
@@ -245,6 +248,8 @@ public class GameBoard extends Group {
                 })
         ));
     }
+
+    public void setScoreKeeper(ScoreKeeper keeper) { this.scoreKeeper = keeper; }
 
     public void draw(SpriteBatch batch, float parentAlpha) {
         batch.end();

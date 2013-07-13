@@ -19,7 +19,9 @@ public class GameActivity extends AndroidApplication {
         cfg.useAccelerometer = false;
         cfg.useCompass = false;
         cfg.useWakelock = false;
-        initialize(new TubeTasticGame(), cfg);
+        TubeTasticGame game = new TubeTasticGame();
+        game.setAppContext(getApplicationContext());
+        initialize(game, cfg);
 //        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling? GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
     }
 
