@@ -14,7 +14,9 @@ dependencies {
     compile files('libs/gdx.jar')
     compile files('libs/gdx-backend-android.jar')
     compile files('libs/gdx-native.jar')
-    compile files('libs/tween-engine-api.jar')
+//    compile files('libs/tween-engine-api.jar')
+    compile files('libs/gdx-freetype.jar')
+    compile files('libs/gdx-freetype-native.jar')
 }
 
 android {

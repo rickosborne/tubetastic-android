@@ -23,6 +23,9 @@ public class GameBoard extends Group {
 //    private boolean interruptPowerSweep = false;
     private boolean awaitingSweep = false;
     private BoardSweeper sweeper;
+    private final float SCORE_HEIGHT = 0.08f;
+    private float scoreHeight = 0;
+    private ScoreActor scoreBoard;
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
@@ -35,7 +38,9 @@ public class GameBoard extends Group {
         this.colCount = colCount;
         board = new BaseTile[rowCount][colCount];
         BaseTile tile;
+        scoreBoard = new ScoreActor();
         resizeToMax(maxWidth, maxHeight);
+        addActor(scoreBoard);
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
                 if (colNum == 0) {
@@ -83,9 +88,16 @@ public class GameBoard extends Group {
         if ((getWidth() == maxWidth) && (getHeight() == maxHeight)) {
             return;
         }
-        tileSize = Math.min(maxWidth / colCount, maxHeight / (rowCount + 1));
-        setSize(Math.round(colCount * tileSize), Math.round((rowCount + 1) * tileSize));
-        setPosition((maxWidth - (tileSize * colCount)) / 2, (maxHeight - (tileSize * (rowCount + 1))) / 2);
+        scoreHeight = maxHeight * SCORE_HEIGHT;
+        float availableHeight = maxHeight - scoreHeight;
+        tileSize = Math.min(maxWidth / colCount, availableHeight / rowCount);
+        float w = Math.round(colCount * tileSize);
+        float h = Math.round((rowCount * tileSize) + scoreHeight);
+        setSize(w, h);
+        float x = (maxWidth - w) / 2f;
+        float y =  (maxHeight - h) / 2f;
+        setPosition(x, y);
+        scoreBoard.resize(0, 0, w, scoreHeight);
     }
 
     public float xForColNum(int colNum) {
@@ -93,12 +105,12 @@ public class GameBoard extends Group {
     }
 
     public float yForRowNum(int rowNum) {
-        return ((rowCount - rowNum) * tileSize);
+        return ((rowCount - 1 - rowNum) * tileSize) + scoreHeight;
     }
 
     public BaseTile tileAt(float x, float y) {
         int colNum = (int) (x / tileSize);
-        int rowNum = rowCount - ((int) (y / tileSize));
+        int rowNum = rowCount - 1 - ((int) ((y - scoreHeight) / tileSize));
 //        Gdx.app.log("GameBoard", String.format("tileAt c:%d r:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
         return getTile(colNum, rowNum);
     }

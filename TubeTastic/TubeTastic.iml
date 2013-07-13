@@ -70,6 +70,8 @@
     <orderEntry type="library" name="gdx" level="project" />
     <orderEntry type="library" name="gdx-native" level="project" />
     <orderEntry type="library" name="gdx-backend-android" level="project" />
+    <orderEntry type="library" name="gdx-freetype" level="project" />
+    <orderEntry type="library" name="gdx-freetype-native" level="project" />
   </component>
 </module>
 
