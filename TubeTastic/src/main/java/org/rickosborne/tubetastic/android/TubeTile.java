@@ -9,10 +9,6 @@ import java.util.ArrayList;
 
 public class TubeTile extends BaseTile {
 
-    public static final float DEGREES_TO_RADIANS = (float) Math.PI / 180f;
-    public static final float DEGREES_SPIN = -90f;
-    public static final float DEGREES_CIRCLE = -360f;
-
     private static final class OutletProbability {
         public double probability;
         public Outlets[] outlets;
@@ -80,6 +76,12 @@ public class TubeTile extends BaseTile {
     public static final float DURATION_VANISH = 0.500f;
     public static final float DURATION_DROP   = 0.250f;
     public static final float DURATION_SPIN   = 0.150f;
+    public static final float DEGREES_TO_RADIANS = (float) Math.PI / 180f;
+    public static final float DEGREES_SPIN = -90f;
+    public static final float DEGREES_CIRCLE = -360f;
+    public static final float OPACITY_VANISH = 0f;
+    public static final float SCALE_VANISH = 0f;
+
 
     static {
         outletProbabilities = new OutletProbability[4];
@@ -201,9 +203,9 @@ public class TubeTile extends BaseTile {
             final TubeTile self = this;
             addAction(Actions.sequence(
                     Actions.parallel(
-                            Actions.alpha(1f, DURATION_VANISH),
+                            Actions.alpha(OPACITY_VANISH, DURATION_VANISH),
                             Actions.rotateBy(DEGREES_CIRCLE, DURATION_VANISH),
-                            Actions.scaleTo(0, 0, DURATION_VANISH)
+                            Actions.scaleTo(SCALE_VANISH, SCALE_VANISH, DURATION_VANISH)
                     ),
                     Actions.run(new Runnable() {
                         @Override
