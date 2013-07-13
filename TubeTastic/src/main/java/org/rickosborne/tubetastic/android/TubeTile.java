@@ -125,7 +125,12 @@ public class TubeTile extends BaseTile {
 
     public TubeTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         super(colNum, rowNum, x, y, size, board);
-        init(colNum, rowNum, x, y, size, board);
+        init(colNum, rowNum, x, y, size, 0, board);
+    }
+
+    public TubeTile(int colNum, int rowNum, float x, float y, float size, int bits, GameBoard board) {
+        super(colNum, rowNum, x, y, size, board);
+        init(colNum, rowNum, x, y, size, bits, board);
     }
 
 //    @Override
@@ -134,9 +139,19 @@ public class TubeTile extends BaseTile {
 //                super.toString() //,        );
 //    }
 
-    @Override
-    public void init(int colNum, int rowNum, float x, float y, float size, final GameBoard board) {
+    public void init(int colNum, int rowNum, float x, float y, float size, int bits, final GameBoard board) {
         super.init(colNum, rowNum, x, y, size, board);
+        if (bits <= 0) {
+            setRandomOutlets();
+        }
+        else {
+            outlets = new Outlets(bits);
+        }
+        resize(x, y, size);
+        ready = true;
+    }
+
+    private void setRandomOutlets() {
         double prob = RandomService.getRandom().nextDouble();
         for (OutletProbability outletProb : outletProbabilities) {
             if (prob <= outletProb.probability) {
@@ -144,11 +159,6 @@ public class TubeTile extends BaseTile {
                 break;
             }
         }
-        resize(x, y, size);
-//        final TubeTile self = this;
-//        setTouchable(Touchable.enabled);
-//        setTouchable(Touchable.disabled);
-        ready = true;
     }
 
 //    @Override

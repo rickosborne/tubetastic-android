@@ -20,34 +20,17 @@ public class TubeTasticGame implements ApplicationListener {
     private ShapeRenderer shapeRenderer;
     private Stage stage;
     private Context appContext;
+    private int width;
+    private int height;
 
     @Override
     public void create() {
-        // oooh look, it's a magic incantation!
-        Gdx.gl.glEnable(GL10.GL_LINE_SMOOTH);
-        Gdx.gl.glHint(GL10.GL_LINE_SMOOTH_HINT, GL10.GL_NICEST);
-        Gdx.gl.glEnable(GL10.GL_POINT_SMOOTH);
-        Gdx.gl.glHint(GL10.GL_POINT_SMOOTH_HINT, GL10.GL_NICEST);
-        Gdx.gl.glHint(GL10.GL_POLYGON_SMOOTH_HINT, GL10.GL_NICEST);
-        Gdx.gl.glEnable(GL11.GL_LINE_SMOOTH);
-        Gdx.gl.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
-        Gdx.gl.glEnable(GL11.GL_POINT_SMOOTH);
-        Gdx.gl.glHint(GL11.GL_POINT_SMOOTH_HINT, GL11.GL_NICEST);
-        Gdx.gl.glHint(GL11.GL_POLYGON_SMOOTH_HINT, GL11.GL_NICEST);
-//        Gdx.gl.glEnable(GL10.GL_BLEND);
-//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
-        Gdx.gl.glEnable(GL20.GL_BLEND);
-//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA_SATURATE, GL11.GL_ONE);
-        float w = Gdx.graphics.getWidth();
-        float h = Gdx.graphics.getHeight();
-        board = new GameBoard(COUNT_COLS, COUNT_ROWS, (int) w, (int) h);
-        board.setScoreKeeper(new ScoreKeeper(appContext));
-        stage = new Stage(w, h, true);
+        width = Gdx.graphics.getWidth();
+        height = Gdx.graphics.getHeight();
+        stage = new Stage(width, height, true);
+        loadOrCreateBoard();
         Gdx.input.setInputProcessor(stage);
-        stage.addActor(board);
+        configureGL();
     }
 
     @Override
@@ -66,16 +49,81 @@ public class TubeTasticGame implements ApplicationListener {
 
     @Override
     public void resize(int width, int height) {
+        Gdx.app.log("TubeTasticGame", String.format("resize w:%d h:%d", width, height));
+        this.width = width;
+        this.height = height;
         board.resizeToMax(width, height);
         stage.setViewport(width, height, true);
+        configureGL();
     }
 
     @Override
     public void pause() {
+        Gdx.app.log("TubeTasticGame", "pause");
+        BoardKeeper boardKeeper = new BoardKeeper(appContext);
+        boardKeeper.saveBoard(board);
     }
 
     @Override
     public void resume() {
+        Gdx.app.log("TubeTasticGame", "resume");
+        GameBoard newBoard = loadBoard();
+        if (newBoard != null) {
+            stage.clear();
+            board = newBoard;
+            stage.addActor(board);
+            board.resizeToMax(width, height);
+            board.begin();
+        }
+        configureGL();
+    }
+
+    private GameBoard loadBoard() {
+        BoardKeeper boardKeeper = new BoardKeeper(appContext);
+        GameBoard newBoard = boardKeeper.loadBoard(width, height);
+        if (newBoard != null) {
+            newBoard.setScoreKeeper(new ScoreKeeper(appContext));
+            newBoard.resizeToMax(width, height);
+        }
+        return newBoard;
+    }
+
+    private GameBoard createBoard() {
+        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height);
+        newBoard.setScoreKeeper(new ScoreKeeper(appContext));
+        newBoard.randomizeTiles();
+        return newBoard;
+    }
+
+    private void loadOrCreateBoard() {
+        board = loadBoard();
+        if (board == null) {
+            board = createBoard();
+        }
+        stage.clear();
+        stage.addActor(board);
+        board.begin();
+    }
+
+    private void configureGL() {
+        // oooh look, it's a magic incantation!
+        Gdx.gl.glEnable(GL10.GL_LINE_SMOOTH);
+        Gdx.gl.glHint(GL10.GL_LINE_SMOOTH_HINT, GL10.GL_NICEST);
+        Gdx.gl.glEnable(GL10.GL_POINT_SMOOTH);
+        Gdx.gl.glHint(GL10.GL_POINT_SMOOTH_HINT, GL10.GL_NICEST);
+        Gdx.gl.glHint(GL10.GL_POLYGON_SMOOTH_HINT, GL10.GL_NICEST);
+        Gdx.gl.glEnable(GL11.GL_LINE_SMOOTH);
+        Gdx.gl.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
+        Gdx.gl.glEnable(GL11.GL_POINT_SMOOTH);
+        Gdx.gl.glHint(GL11.GL_POINT_SMOOTH_HINT, GL11.GL_NICEST);
+        Gdx.gl.glHint(GL11.GL_POLYGON_SMOOTH_HINT, GL11.GL_NICEST);
+//        Gdx.gl.glEnable(GL10.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA_SATURATE, GL11.GL_ONE);
     }
 
     public void setAppContext(Context context) { this.appContext = context; }

@@ -34,6 +34,9 @@ public class SinkTile extends BaseTile {
     public void setPower(Power power) {}
 
     @Override
+    public void setBits(int bits) {}
+
+    @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
         batch.end();
         ShapeRenderer shape = new ShapeRenderer();

@@ -14,5 +14,6 @@
 
 	<string name="prefs_name">TubeTastic</string>
 	<string name="prefs_score_high">score:high</string>
+	<string name="prefs_board_tiles">board:tiles</string>
 
 </resources>

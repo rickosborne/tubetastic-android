@@ -199,6 +199,8 @@ public class BaseTile extends Actor {
 
     public float getAlpha() { return alpha; }
     public void setAlpha(float alpha) { this.alpha = alpha; }
+    public int getBits() { return outlets.getBits(); }
+    public void setBits(int bits) { outlets.setBits(bits); }
     public void setColRow(int colNum, int rowNum) {
         this.colNum = colNum;
         this.rowNum = rowNum;
