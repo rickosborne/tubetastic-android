@@ -4,25 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
 
 public class GameBoard extends Group {
 
-    private static class DroppedTile {
-        public TubeTile tile;
-        public int colNum;
-        public int rowNum;
-        public float colX;
-        public DroppedTile(TubeTile tile, int colNum, int rowNum, float colX) {
-            this.tile = tile;
-            this.colNum = colNum;
-            this.rowNum = rowNum;
-            this.colX = colX;
-        }
-    }
+    public static final float DELAY_SWEEP = 0.125f;
 
     private int rowCount = 0;
     private int colCount = 0;
@@ -31,19 +19,18 @@ public class GameBoard extends Group {
     private int score = 0;
     private float tileSize = 0;
     private boolean ready = false;
-    private int toVanishCount = 0;
-    private int toDropCount = 0;
-    private boolean needPowerSweep = false;
-    private ArrayList<TubeTile> toVanish = new ArrayList<TubeTile>();
-    private ArrayList<DroppedTile> toDrop = new ArrayList<DroppedTile>();
+//    private boolean needPowerSweep = false;
+//    private boolean interruptPowerSweep = false;
+    private boolean awaitingSweep = false;
+    private BoardSweeper sweeper;
 
-    public GameBoard(int rowCount, int colCount, int maxWidth, int maxHeight) {
+    public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
-        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
-        init(rowCount, colCount, maxWidth, maxHeight);
+//        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
+        init(colCount, rowCount, maxWidth, maxHeight);
     }
 
-    private void init(int rowCount, int colCount, int maxWidth, int maxHeight) {
+    private void init(int colCount, int rowCount, int maxWidth, int maxHeight) {
         this.rowCount = rowCount;
         this.colCount = colCount;
         board = new BaseTile[rowCount][colCount];
@@ -60,7 +47,7 @@ public class GameBoard extends Group {
                 else {
                     tile = new TubeTile(colNum, rowNum, xForColNum(colNum), yForRowNum(rowNum), tileSize, this);
                 }
-                board[rowNum][colNum] = tile;
+                setTile(colNum, rowNum, tile);
                 addActor(tile);
             }
         }
@@ -74,7 +61,7 @@ public class GameBoard extends Group {
                 try {
                     if (!event.isHandled()) {
                         Actor target = event.getTarget();
-                        Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), String.format("touchDown x:%.0f y:%.0f", x, y));
+//                        Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), String.format("touchDown x:%.0f y:%.0f", x, y));
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
                             ((TubeTile) tile).onTouchDown();
@@ -82,13 +69,14 @@ public class GameBoard extends Group {
                     }
                 }
                 catch (Exception e) {
-                    Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), "touch exception:" + e.toString());
+                    Gdx.app.error("GameBoard;" + event.getTarget().getClass().getSimpleName(), "touch exception:" + e.toString());
                 }
                 return true;
             }
         });
         setTouchable(Touchable.enabled);
-        powerSweep();
+        sweeper = new BoardSweeper(rowCount * colCount);
+        readyForSweep();
     }
 
     public void resizeToMax(int maxWidth, int maxHeight) {
@@ -111,108 +99,64 @@ public class GameBoard extends Group {
     public BaseTile tileAt(float x, float y) {
         int colNum = (int) (x / tileSize);
         int rowNum = rowCount - ((int) (y / tileSize));
-        Gdx.app.log("GameBoard", String.format("tileAt c:%d r:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+//        Gdx.app.log("GameBoard", String.format("tileAt c:%d r:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+        return getTile(colNum, rowNum);
+    }
+
+    public BaseTile getTile(int colNum, int rowNum) {
         if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
             return board[rowNum][colNum];
         }
         return null;
     }
 
+    public void setTile(int colNum, int rowNum, BaseTile tile) {
+        if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
+            board[rowNum][colNum] = tile;
+        }
+    }
+
+    public int getRowCount() { return rowCount; }
+    public int getColCount() { return colCount; }
+
     private void powerSweep() {
-        needPowerSweep = false;
-        BaseTile tile;
-        int rowNum;
-        int colNum;
-        int maxTileCount = rowCount * colCount;
-        int sinkColNum = colCount - 1;
-        int lastRowNum = rowCount - 1;
+//        Gdx.app.log("GameBoard", "powerSweep begin");
+        if (!awaitingSweep) {
+            return;
+        }
+        awaitingSweep = false;
+//        needPowerSweep = false;
         ready = false;
-        ArrayDeque<BaseTile> toCheck = new ArrayDeque<BaseTile>(maxTileCount);
-        for (rowNum = lastRowNum; rowNum >= 0; rowNum--) {
-            toCheck.add(board[rowNum][0]);
-        }
-        HashSet<BaseTile> sourced   = new HashSet<BaseTile>(maxTileCount);
-        HashSet<BaseTile> sunk      = new HashSet<BaseTile>(maxTileCount);
-        HashSet<BaseTile> neither   = new HashSet<BaseTile>(maxTileCount);
-        HashSet<BaseTile> connected = new HashSet<BaseTile>(maxTileCount);
-        int points = 0;
-        for (rowNum = 0; rowNum < rowCount; rowNum++) {
-            for (colNum = 0; colNum < colCount; colNum++) {
-                neither.add(board[rowNum][colNum]);
+        sweeper.reset();
+        sweeper.resetNeither(this);
+        sweeper.trackSourced(this);
+        sweeper.trackSunk(this);
+        sweeper.trackUnpowered(this);
+        sweeper.trackVanishes(this);
+        for (BoardSweeper.TileChangePower tilePower : sweeper.powered) {
+            if ((tilePower == null) || (tilePower.tile == null)) {
+                continue;
             }
-        }
-        // first, find all of the sourced tiles
-        while (toCheck.size() > 0) {
-            tile = toCheck.pop();
-            if (!tile.isSourced()) {
-                tile.setPower(BaseTile.Power.SOURCED);
-            }
-            sourced.add(tile);
-            neither.remove(tile);
-            if (tile instanceof SinkTile) {
-                connected.add(tile);
-            }
-            for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if ((neighbor != null) && !sourced.contains(neighbor) && !toCheck.contains(neighbor)) {
-                    toCheck.add(neighbor);
-                }
-            }
-        }
-        // then, find all of the sunk tiles that are not sourced
-        for (rowNum = lastRowNum; rowNum >= 0; rowNum--) {
-            tile = board[rowNum][sinkColNum];
-            if ((tile != null) && !sourced.contains(tile) && !toCheck.contains(tile)) {
-                toCheck.add(tile);
-            }
-        }
-        while (toCheck.size() > 0) {
-            tile = toCheck.pop();
-            if (!tile.isSunk()) {
-                tile.setPower(BaseTile.Power.SUNK);
-                sunk.add(tile);
-                neither.remove(tile);
-            }
-            for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if ((neighbor != null) && !sourced.contains(neighbor) && !sunk.contains(neighbor) && !toCheck.contains(neighbor)) {
-                    toCheck.add(neighbor);
-                }
-            }
-        }
-        // reset any leftover tiles
-        for (BaseTile unpowered : neither) {
-            if ((unpowered != null) && !unpowered.isUnpowered()) {
-                unpowered.setPower(BaseTile.Power.NONE);
-            }
+//            Gdx.app.log(tilePower.tile.toString(), String.format("power %s -> %s", tilePower.tile.power, tilePower.power));
+            tilePower.tile.setPower(tilePower.power);
         }
         // gather any connected tiles
-//        toCheck.addAll(connected);
-        if (toCheck.isEmpty()) {
-            Gdx.app.log("GameBoard", "ready");
+        if (sweeper.connected.isEmpty()) {
+//            Gdx.app.log("GameBoard", "ready");
             ready = true;
             settled = true;
-        }
-        while (toCheck.size() > 0) {
-            tile = toCheck.pop();
-            connected.add(tile);
-            for (BaseTile neighbor : tile.getConnectedNeighbors()) {
-                if ((neighbor != null) && !connected.contains(neighbor) && !toCheck.contains(neighbor)) {
-                    toCheck.add(neighbor);
+        } else {
+            sweeper.trackDrops(this);
+//            Gdx.app.log("GameBoard", String.format("vanishing %d", sweeper.vanished.size()));
+            for (TubeTile vanishTile : (HashSet<TubeTile>) sweeper.vanished.clone()) {
+                if (vanishTile != null) {
+                    vanishTile.vanish();
                 }
             }
-            if ((tile != null) && (tile instanceof TubeTile)) {
-//                toVanish.add((TubeTile) tile);
-                toVanishCount++;
+            if (settled) {
+//                Gdx.app.log("GameBoard", String.format("score %d + %d", score, sweeper.vanished.size()));
+                score += sweeper.vanished.size();
             }
-        }
-        points += toVanishCount;
-        Gdx.app.log(toString(), String.format("want to vanish %d", toVanishCount));
-        for (TubeTile vanishTile : toVanish) {
-            if (vanishTile != null) {
-                vanishTile.vanish();
-            }
-        }
-        if (settled) {
-            score += points;
         }
     }
 
@@ -227,62 +171,67 @@ public class GameBoard extends Group {
 
     public boolean isSettled() { return settled; }
 
-    public void tileDropComplete(BaseTile tile, int destinationColNum, int destinationRowNum) {
-        toDropCount--;
-        Gdx.app.log("GameBoard", String.format("tileDropComplete col:%d/%d row:%d/%d remain:%d", destinationColNum, colCount - 1, destinationRowNum, rowCount - 1, toDropCount));
-        board[destinationRowNum][destinationColNum] = tile;
-        if (toDropCount > 0) {
-            return;
-        } else if (toDropCount < 0) {
-            toDropCount = 0;
-            return;
+    public void tileDropComplete(TubeTile tile, int destinationColNum, int destinationRowNum) {
+        if (sweeper.fell.contains(tile)) {
+//            Gdx.app.log("GameBoard", String.format("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size()));
+            setTile(destinationColNum, destinationRowNum, tile);
+            sweeper.fell.remove(tile);
+            if (sweeper.fell.isEmpty()) {
+//                Gdx.app.log("GameBoard", "drop complete");
+                readyForSweep();
+            }
+        } else {
+            Gdx.app.error("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size()));
         }
-//        final GameBoard self = this;
-        readyForSweep();
     }
 
-    public void tileVanishComplete() {
-        toVanishCount--;
-        Gdx.app.log("GameBoard", String.format("vanish:%d", toVanishCount));
-        if (toVanishCount > 0) {
-            return;
-        }
-        for (int colNum = 1; colNum < colCount - 2; colNum++) {
-            int destRowNum = rowCount;
-            float colX = xForColNum(colNum);
-            for (int rowNum = rowCount - 1; rowNum >= 0; rowNum--) {
-                TubeTile tile = (TubeTile) board[rowNum][colNum];
-                if (toVanish.contains(tile)) {
-                    board[rowNum][colNum] = null;
-                    removeActor(tile);
+    public void tileVanishComplete(TubeTile vanishedTile) {
+        if (sweeper.vanished.contains(vanishedTile)) {
+//            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
+            setTile(vanishedTile.colNum, vanishedTile.rowNum, null);
+            removeActor(vanishedTile);
+            sweeper.vanished.remove(vanishedTile);
+            if (sweeper.vanished.isEmpty()) {
+//                Gdx.app.log("GameBoard", String.format("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size()));
+                for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
+//                    Gdx.app.log("GameBoard", String.format("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY));
+                    setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
+                    sweeper.fell.add(droppedTile.tile);
                 }
-                else {
-                    destRowNum--;
-                    if (destRowNum > rowNum) {
-                        toDropCount++;
-                        toDrop.add(new DroppedTile(tile, colNum, rowNum, colX));
-                        board[rowNum][colNum] = null;
-                    }
+                for (BoardSweeper.DroppedTile addedTile : sweeper.added) {
+                    TubeTile tile = new TubeTile(-2, -2, addedTile.colX, addedTile.rowY, tileSize, this);
+                    addActor(tile);
+                    addedTile.tile = tile;
+                    sweeper.fell.add(tile);
+                }
+                for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
+                    droppedTile.tile.dropTo(droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY);
+                }
+                for (BoardSweeper.DroppedTile addedTile : sweeper.added) {
+                    addedTile.tile.dropTo(addedTile.colNum, addedTile.rowNum, addedTile.colX, yForRowNum(addedTile.rowNum));
                 }
             }
-            for (int rowNum = destRowNum - 1; rowNum >= 0; rowNum--) {
-                toDropCount++;
-                TubeTile tile = new TubeTile(-2, -2, colX, yForRowNum(rowNum - destRowNum), tileSize, this);
-                toDrop.add(new DroppedTile(tile, colNum, rowNum, colX));
-                addActor(tile);
-            }
-        }
-        for (DroppedTile drop : toDrop) {
-            drop.tile.dropTo(drop.colNum, drop.rowNum, drop.colX, yForRowNum(drop.rowNum));
+        } else {
+            Gdx.app.error("GameBoard", String.format("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
         }
     }
 
     public void interruptSweep() {
-        needPowerSweep = false;
+        awaitingSweep = false;
     }
 
     public void readyForSweep() {
-        needPowerSweep = true;
+        final GameBoard self = this;
+        awaitingSweep = true;
+        addAction(Actions.sequence(
+                Actions.delay(DELAY_SWEEP),
+                Actions.run(new Runnable() {
+                    @Override
+                    public void run() {
+                        self.powerSweep();
+                    }
+                })
+        ));
     }
 
     public void draw(SpriteBatch batch, float parentAlpha) {
@@ -298,11 +247,11 @@ public class GameBoard extends Group {
         super.draw(batch, parentAlpha);
     }
 
-    public void act (float delta) {
-        if (needPowerSweep) {
-            powerSweep();
-        }
-        super.act(delta);
-    }
+//    public void act (float delta) {
+//        if (needPowerSweep) {
+//            powerSweep();
+//        }
+//        super.act(delta);
+//    }
 
 }

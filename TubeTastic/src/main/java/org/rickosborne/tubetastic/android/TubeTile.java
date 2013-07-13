@@ -20,6 +20,8 @@ import java.util.ArrayList;
 public class TubeTile extends BaseTile {
 
     public static final float DEGREES_TO_RADIANS = (float) Math.PI / 180f;
+    public static final float DEGREES_SPIN = -90f;
+    public static final float DEGREES_CIRCLE = -360f;
 
     private static final class OutletProbability {
         public double probability;
@@ -134,16 +136,11 @@ public class TubeTile extends BaseTile {
         init(colNum, rowNum, x, y, size, board);
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s %s%s%s%s",
-                super.toString(),
-                hasOutletTo(DEGREES_NORTH) ? "N" : "-",
-                hasOutletTo(DEGREES_EAST)  ? "E" : "-",
-                hasOutletTo(DEGREES_SOUTH) ? "S" : "-",
-                hasOutletTo(DEGREES_WEST)  ? "W" : "-"
-        );
-    }
+//    @Override
+//    public String toString() {
+//        return String.format("%s", // %s%s%s%s
+//                super.toString() //,        );
+//    }
 
     @Override
     public void init(int colNum, int rowNum, float x, float y, float size, final GameBoard board) {
@@ -156,77 +153,37 @@ public class TubeTile extends BaseTile {
             }
         }
         resize(x, y, size);
-        final TubeTile self = this;
-//        addListener(new InputListener() {
-//            @Override
-//            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-//                Gdx.app.log("TubeTile", "touchDown");
-//                try {
-//                if (!event.isHandled()) {
-//                    TubeTile tile = (TubeTile) event.getTarget();
-////                    TubeTile tile = self;
-//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
-//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), String.format("touchDown boardReady:%b tileReady:%b remain:%d handled:%b", tile.board.isReady(), tile.ready, tile.spinRemain, event.isHandled()));
-//                    if (tile.board.isReady()) {
-//                        tile.spinRemain++;
-//                        if (tile.ready) {
-//                            tile.spin();
-//                        }
-//                    }
-////                event.stop();
-//                }
-//                }
-//                catch (Exception e) {
-//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
-//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), "touch exception:" + e.toString());
-//                }
-//                return true;
-//            }
-//
-//            @Override
-//            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
-////                TubeTile tile = (TubeTile) event.getTarget();
-//                try {
-//                    TubeTile tile = self;
-//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
-//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), String.format("touchUp boardReady:%b tileReady:%b remain:%d handled:%b", tile.board.isReady(), tile.ready, tile.spinRemain, event.isHandled()));
-//                }
-//                catch (Exception e) {
-//                    String name = event.getTarget() instanceof TubeTile ? event.getTarget().toString() : event.getTarget().getClass().getSimpleName();
-//                    Gdx.app.log("TubeTile;" + name + (name.equals(self.toString()) ? "" : "!" + self.toString()), "touch exception:" + e.toString());
-//                }
-//            }
-//        });
-        setTouchable(Touchable.enabled);
+//        final TubeTile self = this;
+//        setTouchable(Touchable.enabled);
 //        setTouchable(Touchable.disabled);
         ready = true;
     }
 
-    @Override
-    public void setPower(Power power) {
-        if (power == this.power) {
-            return;
-        }
-        this.power = power;
-        // ... animate
-    }
+//    @Override
+//    public void setPower(Power power) {
+//        if (power == this.power) {
+//            return;
+//        }
+//        this.power = power;
+//        // ... animate
+//    }
 
     public void setBits(int bits) { outlets.setBits(bits); }
     public void setReady(boolean ready) { this.ready = ready; }
 
     public void spin() {
-        Gdx.app.log(toString(), String.format("spin remain:%d", spinRemain));
+//        Gdx.app.log(toString(), String.format("spin remain:%d", spinRemain));
         final TubeTile self = this;
         if (spinRemain > 0) {
             ready = false;
             spinRemain--;
             setPower(Power.NONE);
             addAction(Actions.sequence(
-                    Actions.rotateBy(90, DURATION_SPIN),
+                    Actions.rotateBy(DEGREES_SPIN, DURATION_SPIN),
                     Actions.run(new Runnable() {
                         @Override
                         public void run() {
-                            Gdx.app.log(self.toString(), String.format("spunTo r:%.0f x:%.0f y:%.0f w:%.0f h:%.0f", self.getRotation(), self.getX(), self.getY(), self.getWidth(), self.getHeight()));
+//                            Gdx.app.log(self.toString(), String.format("spunTo r:%.0f x:%.0f y:%.0f w:%.0f h:%.0f", self.getRotation(), self.getX(), self.getY(), self.getWidth(), self.getHeight()));
                             self.spin();
                         }
                     })
@@ -234,15 +191,16 @@ public class TubeTile extends BaseTile {
             board.interruptSweep();
         }
         else {
-            float rotation = getRotation();
-            Gdx.app.log(toString(), String.format("done spinning to:%.2f", rotation));
-            if (rotation > 360) {
-                rotation %= 360;
-                setRotation(rotation);
+            outletRotation = Math.round(getRotation());
+//            Gdx.app.log(toString(), String.format("done spinning to:%d", outletRotation));
+            int newRotation = outletRotation % 360;
+            if (newRotation != outletRotation) {
+//                Gdx.app.log(toString(), String.format("rotate reset %d -> %d", outletRotation, newRotation));
+                outletRotation = newRotation;
+                setRotation(newRotation);
             }
-            outletRotation = (int) rotation;
             ready = true;
-            // board.readyForSweep();
+            board.readyForSweep();
         }
     }
 
@@ -252,18 +210,22 @@ public class TubeTile extends BaseTile {
         if (board.isSettled()) {
             final TubeTile self = this;
             addAction(Actions.sequence(
-                    Actions.alpha(0, DURATION_VANISH),
+                    Actions.parallel(
+                            Actions.alpha(1f, DURATION_VANISH),
+                            Actions.rotateBy(DEGREES_CIRCLE, DURATION_VANISH),
+                            Actions.scaleTo(0, 0, DURATION_VANISH)
+                    ),
                     Actions.run(new Runnable() {
                         @Override
                         public void run() {
-                            Gdx.app.log(self.toString(), "vanished");
+//                            Gdx.app.log(self.toString(), "vanished");
                             self.onVanishComplete();
                         }
                     })
             ));
         }
         else {
-            Gdx.app.log(toString(), "auto-vanished");
+//            Gdx.app.log(toString(), "auto-vanished");
             onVanishComplete();
         }
     }
@@ -278,29 +240,27 @@ public class TubeTile extends BaseTile {
                     Actions.run(new Runnable() {
                         @Override
                         public void run() {
-                            Gdx.app.log(self.toString(), String.format("droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
-                            self.setColRow(colNum, rowNum);
-                            self.onDropComplete();
-                            self.setReady(true);
+//                            Gdx.app.log(self.toString(), String.format("droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+                            self.onDropComplete(colNum, rowNum);
                         }
                     })
             ));
         }
         else {
-            Gdx.app.log(self.toString(), String.format("auto-droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
+//            Gdx.app.log(self.toString(), String.format("auto-droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
             setPosition(x, y);
-            setColRow(colNum, rowNum);
-            onDropComplete();
-            setReady(true);
+            onDropComplete(colNum, rowNum);
         }
     }
 
-    public void onDropComplete() {
+    public void onDropComplete(int colNum, int rowNum) {
+        setColRow(colNum, rowNum);
         board.tileDropComplete(this, colNum, rowNum);
+        setReady(true);
     }
 
     public void onVanishComplete() {
-        board.tileVanishComplete();
+        board.tileVanishComplete(this);
     }
 
     @Override
@@ -314,8 +274,10 @@ public class TubeTile extends BaseTile {
         Color backColor = arcShadow(power).cpy();
         float alpha = getAlpha();
         float degrees = getRotation();
+        float scaleX = getScaleX();
+        float scaleY = getScaleY();
         backColor.a = alpha;
-        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees);
+        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees, scaleX, scaleY);
         ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
         float midX = x + midpoint;
         float midY = y + midpoint;
@@ -328,7 +290,7 @@ public class TubeTile extends BaseTile {
         Color arcColor = COLOR_ARC.cpy();
         arcColor.a = alpha;
         if (lines.size() > 0) {
-            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY);
+            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
         }
         ArrayList<ShapeDrawer.LineSegmentArc> arcs = new ArrayList<ShapeDrawer.LineSegmentArc>(outletPathArcs.length);
         for (OutletPathArc arc : outletPathArcs) {
@@ -337,7 +299,7 @@ public class TubeTile extends BaseTile {
             }
         }
         if (arcs.size() > 0) {
-            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY);
+            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
         }
         batch.begin();
     }
@@ -352,7 +314,7 @@ public class TubeTile extends BaseTile {
     */
 
     public void onTouchDown() {
-        Gdx.app.log(toString(), String.format("touchDown boardReady:%b tileReady:%b remain:%d", board.isReady(), ready, spinRemain));
+//        Gdx.app.log(toString(), String.format("touchDown boardReady:%b tileReady:%b remain:%d", board.isReady(), ready, spinRemain));
         if (board.isReady()) {
             spinRemain++;
             if (ready) {

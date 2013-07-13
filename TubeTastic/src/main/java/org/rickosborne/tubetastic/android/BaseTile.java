@@ -40,12 +40,14 @@ public class BaseTile extends Actor {
     public static final int[] outletDegrees = new int[]{DEGREES_NORTH, DEGREES_EAST, DEGREES_SOUTH, DEGREES_WEST};
     public static final String[] outletDirections = new String[]{DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST};
     public static final SparseArray<String> directionFromDegrees;
-    public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
     public static final SparseArray<OutletOffset> outletOffsets;
+    //    public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
+    public static final SparseArray< SparseArray< Integer > > outletRotationsReverse;
+    public static final SparseArray<Integer> directionReverse;
     public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
     public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-    public static final Color COLOR_POWER_SOURCED = new Color(1.0f, 0.6f, 0f, 1.0f);
-    public static final Color COLOR_POWER_SUNK    = new Color(0f, 0.6f, 1.0f, 1.0f);
+    public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
+    public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
 
     static {
         // sweet baby Jesus, Java needs more literals
@@ -53,17 +55,21 @@ public class BaseTile extends Actor {
         for (int i = 0; i < directionCount; i++) {
             directionFromDegrees.put(outletDegrees[i], outletDirections[i]);
         }
-        outletRotationsReverse = new SparseArray<HashMap<String, String>>(directionCount);
+//        outletRotationsReverse = new SparseArray<HashMap<String, String>>(directionCount);
+        outletRotationsReverse = new SparseArray<SparseArray<Integer>>(directionCount);
         outletOffsets = new SparseArray<OutletOffset>(directionCount);
         for (int degrees : outletDegrees) {
-            HashMap<String, String> submap = new HashMap<String, String>(directionCount);
+//            HashMap<String, String> submap = new HashMap<String, String>(directionCount);
+            SparseArray<Integer> submap = new SparseArray<Integer>(directionCount);
             for (int rotated : outletDegrees) {
-                String endDirection = directionFromDegrees.get(rotated);
-                Integer offset = (rotated + degrees) % 360;
-                String startDirection = directionFromDegrees.get(offset);
-                submap.put(startDirection, endDirection);
+//                String endDirection = directionFromDegrees.get(rotated);
+                int offset = (rotated + degrees) % 360;
+//                String startDirection = directionFromDegrees.get(offset);
+//                submap.put(startDirection, endDirection);
+                submap.put(offset, rotated);
             }
-            outletRotationsReverse.put(degrees, submap);
+            outletRotationsReverse.put(-degrees, submap);
+//            outletRotationsReverse.put(degrees, submap);
             OutletOffset offset = new OutletOffset();
             switch (degrees) {
                 case DEGREES_NORTH : offset.col =  0; offset.row = -1; break;
@@ -73,7 +79,12 @@ public class BaseTile extends Actor {
             }
             outletOffsets.put(degrees, offset);
         }
-        Tween.registerAccessor(BaseTile.class, new BaseTileTweener());
+        directionReverse = new SparseArray<Integer>(directionCount);
+        directionReverse.put(DEGREES_NORTH, DEGREES_SOUTH);
+        directionReverse.put(DEGREES_EAST,  DEGREES_WEST);
+        directionReverse.put(DEGREES_SOUTH, DEGREES_NORTH);
+        directionReverse.put(DEGREES_WEST,  DEGREES_EAST);
+//        Tween.registerAccessor(BaseTile.class, new BaseTileTweener());
     }
 
     public static int makeId (int colNum, int rowNum) {
@@ -113,7 +124,7 @@ public class BaseTile extends Actor {
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         super();
-        Gdx.app.log(this.getClass().getSimpleName(), String.format("col:%d row%d x:%.0f y:%.0f size:%.0f", colNum, rowNum, x, y, size));
+//        Gdx.app.log(this.getClass().getSimpleName(), String.format("col:%d row%d x:%.0f y:%.0f size:%.0f", colNum, rowNum, x, y, size));
         init(colNum, rowNum, x, y, size, board);
     }
 
@@ -126,11 +137,24 @@ public class BaseTile extends Actor {
     }
 
     public String toString() {
-        return String.format("%s %d,%d (%.0f,%.0f/%.0fx%.0f)", getClass().getSimpleName(), colNum, rowNum, getX(), getY(), getWidth(), getHeight());
+        return String.format("%s %d,%d (%.0f,%.0f/%.0fx%.0f) %s", getClass().getSimpleName(), colNum, rowNum, getX(), getY(), getWidth(), getHeight(), outlets);
     }
 
     public boolean hasOutletTo(int degrees) {
-        return this.outlets.hasOutlet(degrees);
+        boolean ret = false;
+        SparseArray<Integer> originalMap = outletRotationsReverse.get(outletRotation);
+        if (originalMap != null) {
+            Integer originalDegrees = originalMap.get(degrees);
+            if (originalDegrees != null) {
+                ret = this.outlets.hasOutlet(originalDegrees);
+//                Gdx.app.log(toString(), String.format("hasOutletTo(orig:%d + rot:%d = %d) = %b", originalDegrees, outletRotation, degrees, ret));
+            } else {
+                Gdx.app.error(toString(), String.format("hasOutletTo(orig:? + rot:%d = %d) missing original degrees", outletRotation, degrees));
+            }
+        } else {
+            Gdx.app.error(toString(), String.format("hasOutletTo(orig:? + rot:%d = %d) missing reverse", outletRotation, degrees));
+        }
+        return ret;
     }
 
     public boolean hasOutletTo(String direction) {
@@ -141,7 +165,10 @@ public class BaseTile extends Actor {
         ArrayList<BaseTile> connected = new ArrayList<BaseTile>(directionCount);
         for (int degrees : outletDegrees) {
             if (hasOutletTo(degrees)) {
-                connected.add(neighborAt(degrees));
+                BaseTile neighbor = neighborAt(degrees);
+                if ((neighbor != null) && neighbor.hasOutletTo(directionReverse.get(degrees, -1))) {
+                    connected.add(neighbor);
+                }
             }
         }
         return connected;
@@ -153,6 +180,7 @@ public class BaseTile extends Actor {
     }
 
     public void setPower(Power power) {
+//        Gdx.app.log(toString(), String.format("power %s -> %s", this.power, power));
         this.power = power;
     }
 
@@ -176,8 +204,6 @@ public class BaseTile extends Actor {
     }
 
     public float getAlpha() { return alpha; }
-    public float getScale() { return scale; }
-    public void setScale(float scale) { this.scale = scale; }
     public void setAlpha(float alpha) { this.alpha = alpha; }
     public void setColRow(int colNum, int rowNum) {
         this.colNum = colNum;

@@ -5,6 +5,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SourceTile extends BaseTile {
 
     public static final Color COLOR_SOURCE = new Color(0.25f, 0.5f, 1.0f, 1.0f);

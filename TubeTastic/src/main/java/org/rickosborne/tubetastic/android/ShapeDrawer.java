@@ -121,26 +121,28 @@ public class ShapeDrawer {
         );
     }
 
-    public static void renderLineSegments(ShapeRenderer shape, List<LineSegmentLine> segments, Color color, float lineWidth, float degrees, float originX, float originY) {
+    public static void renderLineSegments(ShapeRenderer shape, List<LineSegmentLine> segments, Color color, float lineWidth, float degrees, float originX, float originY, float scaleX, float scaleY) {
         shape.begin(ShapeRenderer.ShapeType.Line);
         shape.identity();
         shape.setColor(color);
         shape.translate(originX, originY, 0);
         shape.rotate(0f, 0f, 1f, degrees);
-        Gdx.gl.glLineWidth(lineWidth);
+        shape.scale(scaleX, scaleY, 1.0f);
+        Gdx.gl.glLineWidth(lineWidth * scaleX);
         for (LineSegmentLine l : segments) {
             shape.line(l.x1, l.y1, l.x2, l.y2);
         }
         shape.end();
     }
 
-    public static void renderArcSegments(ShapeRenderer shape, List<LineSegmentArc> segments, Color color, float lineWidth, float degrees, float originX, float originY) {
+    public static void renderArcSegments(ShapeRenderer shape, List<LineSegmentArc> segments, Color color, float lineWidth, float degrees, float originX, float originY, float scaleX, float scaleY) {
         shape.begin(ShapeRenderer.ShapeType.Curve);
         shape.identity();
         shape.setColor(color);
         shape.translate(originX, originY, 0);
         shape.rotate(0f, 0f, 1f, degrees);
-        Gdx.gl.glLineWidth(lineWidth);
+        shape.scale(scaleX, scaleY, 1.0f);
+        Gdx.gl.glLineWidth(lineWidth * scaleX);
         for (LineSegmentArc a : segments) {
             for (LineSegmentCurve c : createCurvesFromArc(a.x, a.y, a.radius, a.startAngle, a.endAngle)) {
                 shape.curve(c.x1, c.y1, c.cx1, c.cy1, c.cx2, c.cy2, c.x2, c.y2);
@@ -170,7 +172,7 @@ public class ShapeDrawer {
         shape.end();
     }
 
-    public static void roundRect(ShapeRenderer shape, float x, float y, float width, float height, float radius, Color color, float degrees) {
+    public static void roundRect(ShapeRenderer shape, float x, float y, float width, float height, float radius, Color color, float degrees, float scaleX, float scaleY) {
         float halfWidth = width / 2;
         float halfHeight = height / 2;
         float cornerX = halfWidth - radius;
@@ -179,6 +181,7 @@ public class ShapeDrawer {
         shape.identity();
         shape.translate(x + halfWidth, y + halfHeight, 0);
         shape.rotate(0f, 0f, 1f, degrees);
+        shape.scale(scaleX, scaleY, 1.0f);
         shape.setColor(color);
         shape.filledCircle(-cornerX,  cornerY, radius);
         shape.filledCircle(-cornerX, -cornerY, radius);
@@ -188,6 +191,8 @@ public class ShapeDrawer {
         shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
         shape.identity();
         shape.translate(x + halfWidth, y + halfHeight, 0);
+        shape.rotate(0f, 0f, 1f, degrees);
+        shape.scale(scaleX, scaleY, 1.0f);
         shape.setColor(color);
         shape.filledRect(-cornerX - radius, -cornerY, radius, cornerX * 2);
         shape.filledRect(-cornerX, -cornerY - radius, cornerX * 2, (cornerY + radius) * 2);

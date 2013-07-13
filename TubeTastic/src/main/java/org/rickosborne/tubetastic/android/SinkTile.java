@@ -5,6 +5,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SinkTile extends BaseTile {
 
     public static final Color COLOR_SINK = new Color(1.0f, 0.5f, 0.25f, 1.0f);

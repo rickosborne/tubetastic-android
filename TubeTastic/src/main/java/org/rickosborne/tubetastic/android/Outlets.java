@@ -17,6 +17,14 @@ public class Outlets {
     public Outlets(int bits) {
         setBits(bits);
     }
+    public String toString() {
+        return String.format("%s%s%s%s",
+                hasOutlet(BaseTile.DEGREES_NORTH) ? "N" : "-",
+                hasOutlet(BaseTile.DEGREES_EAST)  ? "E" : "-",
+                hasOutlet(BaseTile.DEGREES_SOUTH) ? "S" : "-",
+                hasOutlet(BaseTile.DEGREES_WEST)  ? "W" : "-"
+        );
+    }
     public int getBits() { return bits; }
     public void setBits(int bits) {
         this.bits = bits;
