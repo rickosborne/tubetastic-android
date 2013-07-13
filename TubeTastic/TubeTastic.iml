@@ -70,7 +70,6 @@
     <orderEntry type="library" name="gdx" level="project" />
     <orderEntry type="library" name="gdx-native" level="project" />
     <orderEntry type="library" name="gdx-backend-android" level="project" />
-    <orderEntry type="library" name="tween-engine-api" level="project" />
   </component>
 </module>
 

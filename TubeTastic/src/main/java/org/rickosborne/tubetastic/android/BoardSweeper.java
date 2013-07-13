@@ -1,7 +1,5 @@
 package org.rickosborne.tubetastic.android;
 
-import com.badlogic.gdx.Gdx;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;

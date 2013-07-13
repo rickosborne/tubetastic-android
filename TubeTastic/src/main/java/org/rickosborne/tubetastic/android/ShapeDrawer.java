@@ -129,6 +129,9 @@ public class ShapeDrawer {
         shape.rotate(0f, 0f, 1f, degrees);
         shape.scale(scaleX, scaleY, 1.0f);
         Gdx.gl.glLineWidth(lineWidth * scaleX);
+//        Gdx.gl.glEnable(GL10.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
         for (LineSegmentLine l : segments) {
             shape.line(l.x1, l.y1, l.x2, l.y2);
         }
@@ -143,6 +146,9 @@ public class ShapeDrawer {
         shape.rotate(0f, 0f, 1f, degrees);
         shape.scale(scaleX, scaleY, 1.0f);
         Gdx.gl.glLineWidth(lineWidth * scaleX);
+//        Gdx.gl.glEnable(GL10.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
         for (LineSegmentArc a : segments) {
             for (LineSegmentCurve c : createCurvesFromArc(a.x, a.y, a.radius, a.startAngle, a.endAngle)) {
                 shape.curve(c.x1, c.y1, c.cx1, c.cy1, c.cx2, c.cy2, c.x2, c.y2);
@@ -152,12 +158,15 @@ public class ShapeDrawer {
     }
 
     public static void line(ShapeRenderer shape, float x1, float y1, float x2, float y2, float lineWidth, Color color, float degrees, float originX, float originY) {
-        Gdx.gl.glLineWidth(lineWidth);
         shape.begin(ShapeRenderer.ShapeType.Line);
         shape.identity();
         shape.setColor(color);
         shape.translate(originX, originY, 0);
         shape.rotate(0f, 0f, 1f, degrees);
+        Gdx.gl.glLineWidth(lineWidth);
+//        Gdx.gl.glEnable(GL10.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
         shape.line(x1, y1, x2, y2);
         shape.end();
     }
@@ -183,7 +192,7 @@ public class ShapeDrawer {
         shape.rotate(0f, 0f, 1f, degrees);
         shape.scale(scaleX, scaleY, 1.0f);
         shape.setColor(color);
-        shape.filledCircle(-cornerX,  cornerY, radius);
+        shape.filledCircle(-cornerX, cornerY, radius);
         shape.filledCircle(-cornerX, -cornerY, radius);
         shape.filledCircle( cornerX,  cornerY, radius);
         shape.filledCircle( cornerX, -cornerY, radius);

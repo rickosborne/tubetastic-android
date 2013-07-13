@@ -2,7 +2,6 @@ package org.rickosborne.tubetastic.android;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.GL20;
@@ -23,12 +22,23 @@ public class TubeTasticGame implements ApplicationListener {
     @Override
     public void create() {
         // oooh look, it's a magic incantation!
+        Gdx.gl.glEnable(GL10.GL_LINE_SMOOTH);
         Gdx.gl.glHint(GL10.GL_LINE_SMOOTH_HINT, GL10.GL_NICEST);
+        Gdx.gl.glEnable(GL10.GL_POINT_SMOOTH);
+        Gdx.gl.glHint(GL10.GL_POINT_SMOOTH_HINT, GL10.GL_NICEST);
         Gdx.gl.glHint(GL10.GL_POLYGON_SMOOTH_HINT, GL10.GL_NICEST);
         Gdx.gl.glEnable(GL11.GL_LINE_SMOOTH);
         Gdx.gl.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST);
+        Gdx.gl.glEnable(GL11.GL_POINT_SMOOTH);
+        Gdx.gl.glHint(GL11.GL_POINT_SMOOTH_HINT, GL11.GL_NICEST);
         Gdx.gl.glHint(GL11.GL_POLYGON_SMOOTH_HINT, GL11.GL_NICEST);
-        Gdx.gl.glEnable(GL11.GL_LINE_SMOOTH);
+//        Gdx.gl.glEnable(GL10.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+//        Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA_SATURATE, GL11.GL_ONE);
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
         board = new GameBoard(COUNT_COLS, COUNT_ROWS, (int) w, (int) h);

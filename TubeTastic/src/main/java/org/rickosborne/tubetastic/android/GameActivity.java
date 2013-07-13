@@ -1,15 +1,9 @@
 package org.rickosborne.tubetastic.android;
 
-//import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
-//import android.view.Window;
-//import android.view.WindowManager;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.GL10;
 
 public class GameActivity extends AndroidApplication {
 
@@ -20,7 +14,7 @@ public class GameActivity extends AndroidApplication {
 //        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 //        setContentView(R.layout.game_activity);
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
-        cfg.useGL20 = false;
+        cfg.useGL20 = true;
 //        cfg.numSamples = 2;
         cfg.useAccelerometer = false;
         cfg.useCompass = false;
