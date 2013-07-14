@@ -241,6 +241,7 @@ public class GameBoard extends Group {
             if (sweeper.fell.isEmpty()) {
 //                Gdx.app.log("GameBoard", "drop complete");
                 readyForSweep();
+                Gdx.app.log("GameBoard", String.format("memory %d %d", Gdx.app.getNativeHeap(), Gdx.app.getJavaHeap()));
             }
         } else {
             Gdx.app.error("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size()));
