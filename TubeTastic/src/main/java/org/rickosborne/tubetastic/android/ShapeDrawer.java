@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import android.support.v4.util.LruCache;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -64,7 +65,24 @@ public class ShapeDrawer {
         }
     }
 
-    public static List<LineSegmentCurve> createCurvesFromArc(float x, float y, float radius, float startAngle, float endAngle) {
+    public static class CurvesCache {
+        private static final LruCache<String, ArrayList<LineSegmentCurve>> cache = new LruCache<String, ArrayList<LineSegmentCurve>>(33);
+        private static String makeKey(float radius, float startAngle, float endAngle) {
+            return String.format("%d:%d:%d", Math.round(radius), Math.round(startAngle), Math.round(endAngle));
+        }
+        public static ArrayList<LineSegmentCurve> get(float radius, float startAngle, float endAngle) {
+            return cache.get(makeKey(radius, startAngle, endAngle));
+        }
+        public static void put(float radius, float startAngle, float endAngle, ArrayList<LineSegmentCurve> curve) {
+            cache.put(makeKey(radius, startAngle, endAngle), curve);
+        }
+    }
+
+    public static List<LineSegmentCurve> createCurvesFromArc(float radius, float startAngle, float endAngle) {
+        ArrayList<LineSegmentCurve> curves = CurvesCache.get(radius, startAngle, endAngle);
+        if (curves != null) {
+            return curves;
+        }
         // adapted from code by Hans Muller at:
         // http://hansmuller-flex.blogspot.com/2011/10/more-about-approximating-circular-arcs.html
         // normalize startAngle, endAngle to [-2PI, 2PI]
@@ -72,13 +90,13 @@ public class ShapeDrawer {
         float endAngleN = endAngle % TWOPI;
         // Compute the sequence of arc curves, up to PI/2 at a time.  Total arc angle
         // is less than 2PI.
-        ArrayList<LineSegmentCurve> curves = new ArrayList<LineSegmentCurve>();
+        curves = new ArrayList<LineSegmentCurve>();
         float sgn = (startAngle < endAngle) ? +1 : -1; // clockwise or counterclockwise
         float a1 = startAngle;
         for (float totalAngle = Math.min(TWOPI, Math.abs(endAngleN - startAngleN)); totalAngle > EPSILON; )
         {
             float a2 = a1 + sgn * Math.min(totalAngle, HALFPI);
-            curves.add(createCurveFromArc(x, y, radius, a1, a2));
+            curves.add(createCurveFromArc(radius, a1, a2));
             totalAngle -= Math.abs(a2 - a1);
             a1 = a2;
         }
@@ -86,10 +104,14 @@ public class ShapeDrawer {
         return curves;
     }
 
-    public static LineSegmentCurve createCurveFromArc(float x, float y, float radius, float startAngle, float endAngle) {
+    public static LineSegmentCurve createCurveFromArc(float radius, float startAngle, float endAngle) {
         // Compute all four points for an arc that subtends the same total angle
         // but is centered on the X-axis
-
+        LineSegmentCurve curve;
+//        LineSegmentCurve curve = CurveCache.get(radius, startAngle, endAngle);
+//        if (curve != null) {
+//            return curve;
+//        }
         float a = (endAngle - startAngle) / 2.0f;
 
         float x4 = radius * (float) Math.cos(a);
@@ -113,12 +135,14 @@ public class ShapeDrawer {
         float cos_ar = (float) Math.cos(ar);
         float sin_ar = (float) Math.sin(ar);
 
-        return new LineSegmentCurve(
-            x + radius * (float) Math.cos(startAngle), y + radius * (float) Math.sin(startAngle),
-            x + x2 * cos_ar - y2 * sin_ar, y + x2 * sin_ar + y2 * cos_ar,
-            x + x3 * cos_ar - y3 * sin_ar, y + x3 * sin_ar + y3 * cos_ar,
-            x + radius * (float) Math.cos(endAngle), y + radius * (float) Math.sin(endAngle)
+        curve = new LineSegmentCurve(
+            radius * (float) Math.cos(startAngle), radius * (float) Math.sin(startAngle),
+            x2 * cos_ar - y2 * sin_ar, x2 * sin_ar + y2 * cos_ar,
+            x3 * cos_ar - y3 * sin_ar, x3 * sin_ar + y3 * cos_ar,
+            radius * (float) Math.cos(endAngle), radius * (float) Math.sin(endAngle)
         );
+//        CurveCache.put(radius, startAngle, endAngle, curve);
+        return curve;
     }
 
     public static void renderLineSegments(ShapeRenderer shape, List<LineSegmentLine> segments, Color color, float lineWidth, float degrees, float originX, float originY, float scaleX, float scaleY) {
@@ -150,8 +174,13 @@ public class ShapeDrawer {
 //        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
 //        Gdx.gl.glBlendFunc(GL10.GL_SRC_ALPHA_SATURATE, GL10.GL_ONE);
         for (LineSegmentArc a : segments) {
-            for (LineSegmentCurve c : createCurvesFromArc(a.x, a.y, a.radius, a.startAngle, a.endAngle)) {
-                shape.curve(c.x1, c.y1, c.cx1, c.cy1, c.cx2, c.cy2, c.x2, c.y2);
+            for (LineSegmentCurve c : createCurvesFromArc(a.radius, a.startAngle, a.endAngle)) {
+                shape.curve(
+                        a.x + c.x1, a.y + c.y1,
+                        a.x + c.cx1, a.y + c.cy1,
+                        a.x + c.cx2, a.y + c.cy2,
+                        a.x + c.x2, a.y + c.y2
+                );
             }
         }
         shape.end();

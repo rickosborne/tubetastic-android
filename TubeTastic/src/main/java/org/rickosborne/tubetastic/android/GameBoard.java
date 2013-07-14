@@ -305,7 +305,8 @@ public class GameBoard extends Group {
 
     public void draw(SpriteBatch batch, float parentAlpha) {
         batch.end();
-        ShapeRenderer shape = new ShapeRenderer();
+//        ShapeRenderer shape = new ShapeRenderer();
+        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
         shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
         shape.identity();
         shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);

@@ -39,7 +39,8 @@ public class SourceTile extends BaseTile {
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
         batch.end();
-        ShapeRenderer shape = new ShapeRenderer();
+//        ShapeRenderer shape = new ShapeRenderer();
+        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
         float x = getX();
         float y = getY();
         float width = getWidth();

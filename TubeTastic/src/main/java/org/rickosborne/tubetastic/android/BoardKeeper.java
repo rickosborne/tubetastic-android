@@ -78,7 +78,7 @@ public class BoardKeeper {
         public Boolean loadFrom(SharedPreferences prefs) {
             String json = prefs.getString(PREFS_BOARD_TILES, "");
             if (json.isEmpty()) {
-                Gdx.app.log("BoardKeeper.SaveGameData", "No tiles");
+                Log.d("BoardKeeper.SaveGameData", "No tiles");
                 return false;
             }
             try {
