@@ -10,6 +10,7 @@
 	<string name="space"> </string>
 	<string name="high_score">High Score: %d</string>
 	<string name="instructions">Start a new game:\nTap the square to align the tubes.</string>
+	<string name="resume_game">Resume Game</string>
 	<string name="new_game">New Game</string>
 
 	<string name="prefs_name">TubeTastic</string>

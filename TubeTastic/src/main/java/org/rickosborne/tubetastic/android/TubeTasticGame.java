@@ -13,7 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 public class TubeTasticGame implements ApplicationListener {
 
     private static final int COUNT_COLS = 7;
-    private static final int COUNT_ROWS = 8;
+    private static final int COUNT_ROWS = 9;
 
     private OrthographicCamera camera;
     private GameBoard board;
@@ -22,6 +22,9 @@ public class TubeTasticGame implements ApplicationListener {
     private Context appContext;
     private int width;
     private int height;
+    private boolean resume = true;
+//    private int score;
+//    private Runnable onUpdateScore;
 
     @Override
     public void create() {
@@ -29,6 +32,10 @@ public class TubeTasticGame implements ApplicationListener {
         height = Gdx.graphics.getHeight();
         stage = new Stage(width, height, true);
         loadOrCreateBoard();
+//        board = createBoard();
+//        stage.clear();
+//        stage.addActor(board);
+//        board.begin();
         Gdx.input.setInputProcessor(stage);
         configureGL();
     }
@@ -40,7 +47,7 @@ public class TubeTasticGame implements ApplicationListener {
 
     @Override
     public void render() {
-        Gdx.gl.glClearColor(1, 1, 1, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         float delta = Gdx.graphics.getDeltaTime();
         stage.act(delta);
@@ -59,9 +66,14 @@ public class TubeTasticGame implements ApplicationListener {
 
     @Override
     public void pause() {
-        Gdx.app.log("TubeTasticGame", "pause");
         BoardKeeper boardKeeper = new BoardKeeper(appContext);
         boardKeeper.saveBoard(board);
+//        score = board.getScore();
+//        Gdx.app.log("TubeTasticGame", String.format("pause score: %d", score));
+//        if (onUpdateScore != null) {
+//            Gdx.app.log("TubeTasticGame", String.format("pause updating score to %d", score));
+//            onUpdateScore.run();
+//        }
     }
 
     @Override
@@ -96,7 +108,9 @@ public class TubeTasticGame implements ApplicationListener {
     }
 
     private void loadOrCreateBoard() {
-        board = loadBoard();
+        if (resume) {
+            board = loadBoard();
+        }
         if (board == null) {
             board = createBoard();
         }
@@ -127,5 +141,8 @@ public class TubeTasticGame implements ApplicationListener {
     }
 
     public void setAppContext(Context context) { this.appContext = context; }
+    public void setResume(Boolean resume) { this.resume = resume; }
+    public int getScore() { return board.getScore(); }
+//    public void setOnUpdateScore(Runnable onUpdateScore) { this.onUpdateScore = onUpdateScore; }
 
 }

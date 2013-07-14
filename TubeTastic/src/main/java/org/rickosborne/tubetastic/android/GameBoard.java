@@ -79,7 +79,7 @@ public class GameBoard extends Group {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 try {
-                    if (!event.isHandled()) {
+                    if (!event.isHandled() && self.isReady() && self.isSettled()) {
                         Actor target = event.getTarget();
 //                        Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), String.format("touchDown x:%.0f y:%.0f", x, y));
                         BaseTile tile = self.tileAt(x, y);
@@ -169,7 +169,16 @@ public class GameBoard extends Group {
     public int getRowCount() { return rowCount; }
     public int getColCount() { return colCount; }
     public int getScore() { return score; }
-    public void setScore(int score) { this.score = score; }
+    public void setScore(int score) {
+        this.score = score;
+        if (scoreKeeper != null) {
+            scoreKeeper.addScore(score);
+        }
+        if (scoreBoard != null) {
+            scoreBoard.setScore(score);
+        }
+    }
+    public void addScore(int score) { setScore(this.score + score); }
 
     private void powerSweep() {
 //        Gdx.app.log("GameBoard", "powerSweep begin");
@@ -209,7 +218,6 @@ public class GameBoard extends Group {
 //                Gdx.app.log("GameBoard", String.format("score %d + %d", score, sweeper.vanished.size()));
                 score += sweeper.vanished.size();
                 scoreBoard.setScore(score);
-                scoreKeeper.addScore(score);
             }
         }
     }
@@ -227,11 +235,11 @@ public class GameBoard extends Group {
 
     public void tileDropComplete(TubeTile tile, int destinationColNum, int destinationRowNum) {
         if (sweeper.fell.contains(tile)) {
-            Gdx.app.log("GameBoard", String.format("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size()));
+//            Gdx.app.log("GameBoard", String.format("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size()));
             setTile(destinationColNum, destinationRowNum, tile);
             sweeper.fell.remove(tile);
             if (sweeper.fell.isEmpty()) {
-                Gdx.app.log("GameBoard", "drop complete");
+//                Gdx.app.log("GameBoard", "drop complete");
                 readyForSweep();
             }
         } else {
@@ -241,14 +249,14 @@ public class GameBoard extends Group {
 
     public void tileVanishComplete(TubeTile vanishedTile) {
         if (sweeper.vanished.contains(vanishedTile)) {
-            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
+//            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
             setTile(vanishedTile.colNum, vanishedTile.rowNum, null);
             removeActor(vanishedTile);
             sweeper.vanished.remove(vanishedTile);
             if (sweeper.vanished.isEmpty()) {
-                Gdx.app.log("GameBoard", String.format("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size()));
+//                Gdx.app.log("GameBoard", String.format("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size()));
                 for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
-                    Gdx.app.log("GameBoard", String.format("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY));
+//                    Gdx.app.log("GameBoard", String.format("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY));
                     setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
                     sweeper.fell.add(droppedTile.tile);
                 }
@@ -288,7 +296,12 @@ public class GameBoard extends Group {
         ));
     }
 
-    public void setScoreKeeper(ScoreKeeper keeper) { this.scoreKeeper = keeper; }
+    public void setScoreKeeper(ScoreKeeper keeper) {
+        scoreKeeper = keeper;
+        if ((scoreKeeper != null) && (score > 0)) {
+            scoreKeeper.addScore(score);
+        }
+    }
 
     public void draw(SpriteBatch batch, float parentAlpha) {
         batch.end();

@@ -40,7 +40,7 @@ public class ScoreActor extends Actor {
         Vector2 coords = localToStageCoordinates(new Vector2(x, y));
         scoreY = y + (height - padding) + coords.y;
         scoreX = x + coords.x;
-        Gdx.app.log("ScoreActor", String.format("resize x:%.0f y:%.0f w:%.0f h:%.0f fontSize:%d scoreY:%.0f sx:%.0f sy:%.0f", x, y, width, height, fontSize, scoreY, coords.x, coords.y));
+//        Gdx.app.log("ScoreActor", String.format("resize x:%.0f y:%.0f w:%.0f h:%.0f fontSize:%d scoreY:%.0f sx:%.0f sy:%.0f", x, y, width, height, fontSize, scoreY, coords.x, coords.y));
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(SCORE_FONT));
         font = generator.generateFont(fontSize, SCORE_CHARACTERS, false);
         font.setColor(COLOR_SCORE_FORE);
