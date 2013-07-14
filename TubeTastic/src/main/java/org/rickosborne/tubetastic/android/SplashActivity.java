@@ -69,6 +69,11 @@ public class SplashActivity extends Activity {
         startActivityForResult(i, REQUEST_GAME);
     }
 
+    public void onGfxCache (View sender) {
+        Intent i = new Intent(this, GfxCacheActivity.class);
+        startActivity(i);
+    }
+
     private void setScore() {
         FontableTextView scoreView = (FontableTextView) findViewById(R.id.splash_score);
         String scoreTemplate = getString(R.string.high_score);

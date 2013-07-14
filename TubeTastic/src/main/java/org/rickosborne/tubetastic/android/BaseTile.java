@@ -3,6 +3,8 @@ package org.rickosborne.tubetastic.android;
 import android.util.SparseArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
@@ -42,6 +44,10 @@ public class BaseTile extends Actor {
     public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
     public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
     public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
+    public static String CACHE_KEY = "base";
+    public static final float SIZE_PADDING = 1f / 16f;
+    public static final float SIZE_ARCWIDTH = 1f / 12f;
+    protected static final TileRenderer renderer = new TileRenderer();
 
     static {
         // sweet baby Jesus, Java needs more literals
@@ -115,6 +121,8 @@ public class BaseTile extends Actor {
     protected float alpha = 0f;
     protected float padding = 0;
     protected float arcWidth = 0;
+    protected Texture texture;
+    protected Pixmap pixmap;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         super();
@@ -191,10 +199,13 @@ public class BaseTile extends Actor {
     }
 
     protected void resize(float x, float y, float size) {
+//        if (size != getWidth()) {
+//            dispose();
+//        }
         midpoint = size * 0.5f;
         setBounds(x, y, size, size);
-        padding = size / 16f;
-        arcWidth = size / 12f;
+        padding = size * SIZE_PADDING;
+        arcWidth = size * SIZE_ARCWIDTH;
     }
 
     public float getAlpha() { return alpha; }
@@ -206,5 +217,37 @@ public class BaseTile extends Actor {
         this.rowNum = rowNum;
         this.id = makeId(colNum, rowNum);
     }
+
+    public String getCacheKey() {
+        return CACHE_KEY;
+    }
+
+//    public Pixmap getPixmap() {
+//        return pixmap;
+//    }
+//
+//    public Texture getTexture() {
+//        if (texture == null) {
+//            texture = new Texture(getPixmap());
+//        }
+//        return texture;
+//    }
+//
+//    protected void dispose() {
+//        if (texture != null) {
+//            texture.dispose();
+//            texture = null;
+//        }
+//        if (pixmap != null) {
+//            pixmap.dispose();
+//            pixmap = null;
+//        }
+//    }
+//
+//    @Override
+//    protected void finalize() throws Throwable {
+//        super.finalize();
+//        dispose();
+//    }
 
 }

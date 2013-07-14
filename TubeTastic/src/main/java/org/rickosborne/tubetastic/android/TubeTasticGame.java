@@ -12,8 +12,8 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class TubeTasticGame implements ApplicationListener {
 
-    private static final int COUNT_COLS = 7;
-    private static final int COUNT_ROWS = 9;
+    public static final int COUNT_COLS = 7;
+    public static final int COUNT_ROWS = 9;
 
     private OrthographicCamera camera;
     private GameBoard board;

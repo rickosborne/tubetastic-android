@@ -52,15 +52,15 @@ public class ScoreActor extends Actor {
 
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
-        batch.end();
+//        batch.end();
 //        ShapeRenderer shape = new ShapeRenderer();
-        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
-        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
-        shape.identity();
-        shape.setColor(COLOR_SCORE_BACK);
-        shape.filledRect(getX(), getY(), getWidth(), getHeight());
-        shape.end();
-        batch.begin();
+//        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
+//        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
+//        shape.identity();
+//        shape.setColor(COLOR_SCORE_BACK);
+//        shape.filledRect(getX(), getY(), getWidth(), getHeight());
+//        shape.end();
+//        batch.begin();
         String scoreText = String.format("%d", score);
         BitmapFont.TextBounds bounds = font.getBounds(scoreText);
         font.draw(batch, scoreText, scoreX + ((getWidth() - bounds.width) * 0.5f), scoreY);

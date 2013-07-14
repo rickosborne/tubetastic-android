@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.rickosborne.tubetastic.android"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0"
+    android:installLocation="auto">
 
     <uses-sdk
         android:minSdkVersion="10"
@@ -23,12 +24,18 @@
             </intent-filter>
         </activity>
 	    <activity
-			android:name="org.rickosborne.tubetastic.android.GameActivity"
-			android:label="@string/app_title">
+			    android:name="org.rickosborne.tubetastic.android.GameActivity"
+			    android:label="@string/app_title"
+			    android:configChanges="orientation|keyboard|keyboardHidden">
 		    <intent-filter>
-			    <!--
-			    <action android:name="org.rickosborne.tubetastic.android.GameActivity" />
-			    -->
+			    <category android:name="android.intent.category.DEFAULT"/>
+		    </intent-filter>
+	    </activity>
+	    <activity
+			    android:name="org.rickosborne.tubetastic.android.GfxCacheActivity"
+			    android:label="@string/app_title"
+			    android:configChanges="orientation|keyboard|keyboardHidden">
+		    <intent-filter>
 			    <category android:name="android.intent.category.DEFAULT"/>
 		    </intent-filter>
 	    </activity>

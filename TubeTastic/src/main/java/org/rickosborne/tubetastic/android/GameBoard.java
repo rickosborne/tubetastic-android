@@ -39,6 +39,7 @@ public class GameBoard extends Group {
         super();
 //        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
         init(colCount, rowCount, maxWidth, maxHeight);
+        Gdx.graphics.setContinuousRendering(true);
     }
 
     private void init(int colCount, int rowCount, int maxWidth, int maxHeight) {
@@ -84,6 +85,7 @@ public class GameBoard extends Group {
 //                        Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), String.format("touchDown x:%.0f y:%.0f", x, y));
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
+                            Gdx.graphics.setContinuousRendering(true);
                             ((TubeTile) tile).onTouchDown();
                         }
                     }
@@ -186,6 +188,7 @@ public class GameBoard extends Group {
             return;
         }
         awaitingSweep = false;
+        Boolean activateRendering = false;
 //        needPowerSweep = false;
         ready = false;
         sweeper.reset();
@@ -200,13 +203,18 @@ public class GameBoard extends Group {
             }
 //            Gdx.app.log(tilePower.tile.toString(), String.format("power %s -> %s", tilePower.tile.power, tilePower.power));
             tilePower.tile.setPower(tilePower.power);
+            activateRendering = true;
         }
         // gather any connected tiles
         if (sweeper.connected.isEmpty()) {
 //            Gdx.app.log("GameBoard", "ready");
             ready = true;
             settled = true;
+            if (!activateRendering) {
+                Gdx.graphics.setContinuousRendering(false);
+            }
         } else {
+            activateRendering = true;
             sweeper.trackDrops(this);
 //            Gdx.app.log("GameBoard", String.format("vanishing %d", sweeper.vanished.size()));
             for (TubeTile vanishTile : (HashSet<TubeTile>) sweeper.vanished.clone()) {
@@ -219,6 +227,9 @@ public class GameBoard extends Group {
                 score += sweeper.vanished.size();
                 scoreBoard.setScore(score);
             }
+        }
+        if (activateRendering) {
+            Gdx.graphics.setContinuousRendering(true);
         }
     }
 
@@ -305,16 +316,16 @@ public class GameBoard extends Group {
     }
 
     public void draw(SpriteBatch batch, float parentAlpha) {
-        batch.end();
+//        batch.end();
 //        ShapeRenderer shape = new ShapeRenderer();
-        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
-        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
-        shape.identity();
-        shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);
-        shape.rotate(0f, 0f, 1f, getRotation());
-        shape.filledRect(getX(), getY(), getWidth(), getHeight());
-        shape.end();
-        batch.begin();
+//        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
+//        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
+//        shape.identity();
+//        shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);
+//        shape.rotate(0f, 0f, 1f, getRotation());
+//        shape.filledRect(getX(), getY(), getWidth(), getHeight());
+//        shape.end();
+//        batch.begin();
         super.draw(batch, parentAlpha);
     }
 

@@ -41,11 +41,11 @@
 		android:text="@string/space"
 		style="@style/SplashScore"/>
 	<Button style="@style/SplashNewGame" android:id="@+id/splash_resumegame" android:layout_width="wrap_content"
-	        android:layout_height="wrap_content" android:layout_gravity="center" android:text="@string/resume_game"
-	        android:onClick="onResumeGame"
-	        android:layout_margin="@dimen/activity_vertical_margin"
-	        android:enabled="false"
-			/>
+        android:layout_height="wrap_content" android:layout_gravity="center" android:text="@string/resume_game"
+        android:onClick="onResumeGame"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        android:enabled="false"
+		/>
 	<Button
 		android:id="@+id/splash_newgame"
 		android:layout_width="wrap_content"
@@ -55,4 +55,13 @@
 	    style="@style/SplashNewGame"
 	    android:onClick="onNewGame"
 	    android:layout_margin="@dimen/activity_vertical_margin"/>
+	<Button
+		android:id="@+id/splash_gfxcache"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center"
+		android:text="@string/gfx_cache"
+		style="@style/SplashNewGame"
+		android:onClick="onGfxCache"
+		android:layout_margin="@dimen/activity_vertical_margin"/>
 </LinearLayout>

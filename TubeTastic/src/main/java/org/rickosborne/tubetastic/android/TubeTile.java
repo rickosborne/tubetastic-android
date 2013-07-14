@@ -118,6 +118,7 @@ public class TubeTile extends BaseTile {
         outletPathArcs[1] = new OutletPathArc(Outlets.BIT_EAST,  Outlets.BIT_SOUTH,  1, -1, 1, DEGREES_EAST, DEGREES_SOUTH);
         outletPathArcs[2] = new OutletPathArc(Outlets.BIT_SOUTH, Outlets.BIT_WEST,  -1, -1, 1, DEGREES_EAST, DEGREES_NORTH);
         outletPathArcs[3] = new OutletPathArc(Outlets.BIT_WEST , Outlets.BIT_NORTH, -1,  1, 1, DEGREES_NORTH2, DEGREES_EAST);
+        CACHE_KEY = "t%d";
     }
 
     private int spinRemain = 0;
@@ -267,44 +268,45 @@ public class TubeTile extends BaseTile {
 
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
-        batch.end();
+        batch.draw(renderer.getTextureForTile(this), getX(), getY(), getWidth(), getHeight());
+//        batch.end();
 //        ShapeRenderer shape = new ShapeRenderer();
-        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
-        float x = getX();
-        float y = getY();
-        float width = getWidth();
-        float height = getHeight();
-        Color backColor = arcShadow(power).cpy();
-        float alpha = getAlpha();
-        float degrees = getRotation();
-        float scaleX = getScaleX();
-        float scaleY = getScaleY();
-        backColor.a = alpha;
-        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees, scaleX, scaleY);
-        ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
-        float midX = x + midpoint;
-        float midY = y + midpoint;
-        int bits = outlets.getBits();
-        for (OutletPathLine line : outletPathLines) {
-            if (((line.fromBit == 0) && (bits == line.toBit)) || (((bits & line.fromBit) != 0) && ((bits & line.toBit) != 0))) {
-                lines.add(line.segment(midpoint));
-            }
-        }
-        Color arcColor = COLOR_ARC.cpy();
-        arcColor.a = alpha;
-        if (lines.size() > 0) {
-            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
-        }
-        ArrayList<ShapeDrawer.LineSegmentArc> arcs = new ArrayList<ShapeDrawer.LineSegmentArc>(outletPathArcs.length);
-        for (OutletPathArc arc : outletPathArcs) {
-            if (((bits & arc.fromBit) != 0) && ((bits & arc.toBit) != 0)) {
-                arcs.add(arc.segment(midpoint));
-            }
-        }
-        if (arcs.size() > 0) {
-            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
-        }
-        batch.begin();
+//        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
+//        float x = getX();
+//        float y = getY();
+//        float width = getWidth();
+//        float height = getHeight();
+//        Color backColor = arcShadow(power).cpy();
+//        float alpha = getAlpha();
+//        float degrees = getRotation();
+//        float scaleX = getScaleX();
+//        float scaleY = getScaleY();
+//        backColor.a = alpha;
+//        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees, scaleX, scaleY);
+//        ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
+//        float midX = x + midpoint;
+//        float midY = y + midpoint;
+//        int bits = outlets.getBits();
+//        for (OutletPathLine line : outletPathLines) {
+//            if (((line.fromBit == 0) && (bits == line.toBit)) || (((bits & line.fromBit) != 0) && ((bits & line.toBit) != 0))) {
+//                lines.add(line.segment(midpoint));
+//            }
+//        }
+//        Color arcColor = COLOR_ARC.cpy();
+//        arcColor.a = alpha;
+//        if (lines.size() > 0) {
+//            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
+//        }
+//        ArrayList<ShapeDrawer.LineSegmentArc> arcs = new ArrayList<ShapeDrawer.LineSegmentArc>(outletPathArcs.length);
+//        for (OutletPathArc arc : outletPathArcs) {
+//            if (((bits & arc.fromBit) != 0) && ((bits & arc.toBit) != 0)) {
+//                arcs.add(arc.segment(midpoint));
+//            }
+//        }
+//        if (arcs.size() > 0) {
+//            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
+//        }
+//        batch.begin();
     }
 
     /*
@@ -324,6 +326,11 @@ public class TubeTile extends BaseTile {
                 spin();
             }
         }
+    }
+
+    @Override
+    public String getCacheKey() {
+        return String.format(CACHE_KEY, outlets.getBits());
     }
 
 }

@@ -23,7 +23,7 @@ public class GameActivity extends AndroidApplication {
 //        setContentView(R.layout.game_activity);
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         cfg.useGL20 = true;
-//        cfg.numSamples = 2;
+        cfg.numSamples = 2;
         cfg.useAccelerometer = false;
         cfg.useCompass = false;
         cfg.useWakelock = false;
