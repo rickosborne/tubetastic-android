@@ -183,11 +183,11 @@ public class TubeTile extends BaseTile {
         if (board.isSettled()) {
             final TubeTile self = this;
             addAction(Actions.sequence(
-                    Actions.parallel(
+//                    Actions.parallel(
                             Actions.alpha(OPACITY_VANISH, DURATION_VANISH),
-                            Actions.rotateBy(DEGREES_CIRCLE, DURATION_VANISH),
-                            Actions.scaleTo(SCALE_VANISH, SCALE_VANISH, DURATION_VANISH)
-                    ),
+//                            Actions.rotateBy(DEGREES_CIRCLE, DURATION_VANISH),
+//                            Actions.scaleTo(SCALE_VANISH, SCALE_VANISH, DURATION_VANISH)
+//                    ),
                     Actions.run(new Runnable() {
                         @Override
                         public void run() {

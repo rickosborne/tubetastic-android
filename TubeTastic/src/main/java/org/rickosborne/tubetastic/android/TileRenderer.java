@@ -1,6 +1,5 @@
 package org.rickosborne.tubetastic.android;
 
-import android.util.Log;
 import android.util.SparseArray;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -10,10 +9,8 @@ import com.badlogic.gdx.math.MathUtils;
 
 public class TileRenderer extends Debuggable {
 
-    static {
-        CLASS_NAME = "TileRenderer";
-        DEBUG_MODE = false;
-    }
+    protected static String CLASS_NAME = "TileRenderer";
+    protected static boolean DEBUG_MODE = true;
 
     public static final int BITS_SOURCED = 400;
     public static final int BITS_SUNK    = 100;
@@ -48,7 +45,7 @@ public class TileRenderer extends Debuggable {
     private SparseArray<TileCacheItem> cache;
 
     public TileRenderer() {
-        Log.d(CLASS_NAME, String.format("ctor count:%d", TILE_COUNT));
+        debug("ctor count:%d", TILE_COUNT);
         cache = new SparseArray<TileCacheItem>(TILE_COUNT);
     }
 
@@ -109,7 +106,10 @@ public class TileRenderer extends Debuggable {
     private static void drawHLine(Pixmap target, int x, int y, int width, int thickness) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
         target.setColor(BaseTile.COLOR_ARC);
-        target.fillRectangle(x, y - (thickness / 2), width, thickness);
+        int halfThickness = (thickness / 2);
+        int bottom = y - halfThickness;
+        debug("drawHLine x:%d y:%d w:%d t:%d ht:%d b:%d", x, y, width, thickness, halfThickness, bottom);
+        target.fillRectangle(x, bottom, width, thickness);
     }
 
     private static void drawVLine(Pixmap target, int x, int y, int height, int thickness) {
@@ -119,14 +119,14 @@ public class TileRenderer extends Debuggable {
     }
 
     public static Pixmap renderPixmapForTile(BaseTile tile, int size) {
-        int tileSize = size * SCALE_OVERSIZE;
+        int tileSize = (size * SCALE_OVERSIZE);
         int bits = tile.getBits();
-        debug("getPixmap size:%d/%d bits:%d power:%s", size, tileSize, bits, tile.power);
         int halfSize = tileSize / 2;
         int padding = (int) (tileSize * BaseTile.SIZE_PADDING);
         int radius = halfSize - (padding * 2);
         int arcSize = (int) (tileSize * BaseTile.SIZE_ARCWIDTH);
         int halfArcSize = arcSize / 2;
+        debug("getPixmap size:%d/%d bits:%d power:%s pad:%d r:%d arcSize:%d has:%d", size, tileSize, bits, tile.power, padding, radius, arcSize, halfArcSize);
         Color backColor;
         switch (tile.power) {
             case SOURCED: backColor = SourceTile.COLOR_POWER_SOURCED; break;

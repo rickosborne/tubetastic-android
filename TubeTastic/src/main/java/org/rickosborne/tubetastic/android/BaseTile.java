@@ -47,7 +47,7 @@ public class BaseTile extends DebuggableActor {
     public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
     public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
     public static final float SIZE_PADDING = 1f / 16f;
-    public static final float SIZE_ARCWIDTH = 1f / 12f;
+    public static final float SIZE_ARCWIDTH = 1f / 8f;
     private TileRenderer renderer;
 
     static {
@@ -102,7 +102,6 @@ public class BaseTile extends DebuggableActor {
     protected Outlets outlets = new Outlets();
     protected int outletRotation = 0;
     protected float midpoint = 0f;
-    protected float alpha = 0f;
     protected float padding = 0;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
@@ -184,8 +183,6 @@ public class BaseTile extends DebuggableActor {
         padding = MathUtils.floor(size * SIZE_PADDING);
     }
 
-    public float getAlpha() { return alpha; }
-    public void setAlpha(float alpha) { this.alpha = alpha; }
     public int getBits() { return outlets.getBits(); }
     public void setBits(int bits) { outlets.setBits(bits); }
     public void setColRow(int colNum, int rowNum) {
@@ -198,7 +195,13 @@ public class BaseTile extends DebuggableActor {
 
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
+        Color tileColor = getColor();
+        Color batchColor = batch.getColor();
+        Color newColor = batchColor.cpy();
+        newColor.a *= tileColor.a * parentAlpha;
+        batch.setColor(newColor);
         batch.draw(renderer.getTextureRegionForTile(this), getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
+        batch.setColor(batchColor);
     }
 }
 
