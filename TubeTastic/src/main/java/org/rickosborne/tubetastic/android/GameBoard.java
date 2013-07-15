@@ -35,14 +35,12 @@ public class GameBoard extends Group {
     private float scoreHeight = 0;
     private ScoreActor scoreBoard;
     private ScoreKeeper scoreKeeper;
-//    private HashSet<Actor> childActors = new HashSet<Actor>();
     protected final TileRenderer renderer = new TileRenderer();
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
 //        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
         init(colCount, rowCount, maxWidth, maxHeight);
-//        Gdx.graphics.setContinuousRendering(true);
     }
 
     private void init(int colCount, int rowCount, int maxWidth, int maxHeight) {
@@ -59,9 +57,15 @@ public class GameBoard extends Group {
     }
 
     public void randomizeTiles() {
+        ready = false;
+        settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
-                BaseTile tile;
+                BaseTile tile = tileAt(colNum, rowNum);
+                if (tile != null) {
+                    removeActor(tile);
+                    setTile(colNum, rowNum, null);
+                }
                 TILE_TYPE type;
                 if (colNum == 0) {
                     type = TILE_TYPE.SOURCE;
@@ -101,7 +105,6 @@ public class GameBoard extends Group {
         });
         setTouchable(Touchable.enabled);
         awaitingSweep = true;
-//        readyForSweep();
         powerSweep();
     }
 
@@ -145,7 +148,7 @@ public class GameBoard extends Group {
 
     public BaseTile setTile(int colNum, int rowNum, BaseTile tile) {
         if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
-            BaseTile existing = board[rowNum][colNum];
+//            BaseTile existing = board[rowNum][colNum];
 //            if (existing != null) {
 //                removeActor(existing);
 //            }
@@ -224,7 +227,7 @@ public class GameBoard extends Group {
         } else {
             sweeper.trackDrops(this);
             Gdx.app.log(CLASS_NAME, String.format("vanishing %d", sweeper.vanished.size()));
-            for (TubeTile vanishTile : (HashSet<TubeTile>) sweeper.vanished.clone()) {
+            for (TubeTile vanishTile : new HashSet<TubeTile>(sweeper.vanished)) {
                 if (vanishTile != null) {
                     Gdx.app.log(CLASS_NAME, String.format("vanishing %s", vanishTile));
                     vanishTile.vanish();
@@ -234,6 +237,9 @@ public class GameBoard extends Group {
                 Gdx.app.log(CLASS_NAME, String.format("score %d + %d", score, sweeper.vanished.size()));
                 score += sweeper.vanished.size();
                 scoreBoard.setScore(score);
+            } else {
+                Gdx.app.log(CLASS_NAME, "not settled");
+                readyForSweep();
             }
         }
         Gdx.app.log(CLASS_NAME, "powerSweep done");
@@ -324,30 +330,5 @@ public class GameBoard extends Group {
             scoreKeeper.addScore(score);
         }
     }
-
-//    private void toggleContinuousRendering(boolean continuous) {
-//        Gdx.app.log(CLASS_NAME, String.format("toggleContinuousRendering %b", continuous));
-//        if (continuous) {
-//            Gdx.graphics.requestRendering();
-//        }
-//        Gdx.graphics.setContinuousRendering(continuous);
-//        if (!continuous) {
-//            Gdx.graphics.requestRendering();
-//        }
-//    }
-
-//    public void draw(SpriteBatch batch, float parentAlpha) {
-//        batch.end();
-//        ShapeRenderer shape = new ShapeRenderer();
-//        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
-//        shape.begin(ShapeRenderer.ShapeType.FilledRectangle);
-//        shape.identity();
-//        shape.setColor(0.2f, 0.2f, 0.2f, 1.0f);
-//        shape.rotate(0f, 0f, 1f, getRotation());
-//        shape.filledRect(getX(), getY(), getWidth(), getHeight());
-//        shape.end();
-//        batch.begin();
-//        super.draw(batch, parentAlpha);
-//    }
 
 }

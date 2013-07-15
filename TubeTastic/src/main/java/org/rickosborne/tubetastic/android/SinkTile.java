@@ -20,11 +20,6 @@ public class SinkTile extends BaseTile {
     }
 
     @Override
-    public void resize(float x, float y, float size) {
-        super.resize(x, y, size);
-    }
-
-    @Override
     public void setPower(Power power) {}
 
     @Override

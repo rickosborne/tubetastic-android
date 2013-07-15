@@ -1,6 +1,9 @@
 package org.rickosborne.tubetastic.android;
 
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -18,13 +21,10 @@ public class GameActivity extends AndroidApplication {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//        setContentView(R.layout.game_activity);
         AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
         cfg.useGL20 = true;
         cfg.numSamples = 2;
-        cfg.useAccelerometer = false;
+        cfg.useAccelerometer = true;
         cfg.useCompass = false;
         cfg.useWakelock = false;
         game = new TubeTasticGame();
@@ -32,22 +32,7 @@ public class GameActivity extends AndroidApplication {
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
         Log.d("GameActivity", String.format("onCreate resume:%b", wantResume));
         game.setResume(wantResume);
-//        final GameActivity self = this;
-//        game.setOnUpdateScore(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    int score = game.getScore();
-//                    Log.d("GameActivity", String.format("onUpdateScore %d", score));
-//                    self.setScore(score);
-//                }
-//                catch (Exception e) {
-//                    Log.e("GameActivity", String.format("onUpdateScore exception: %s", e.toString()));
-//                }
-//            }
-//        });
         initialize(game, cfg);
-//        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling? GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
     }
 
     @Override
@@ -65,18 +50,6 @@ public class GameActivity extends AndroidApplication {
         getMenuInflater().inflate(R.menu.game, menu);
         return true;
     }
-
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        updateScore();
-//    }
-//
-//    @Override
-//         protected void onStop() {
-//        super.onStop();
-//        updateScore();
-//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -99,4 +72,5 @@ public class GameActivity extends AndroidApplication {
         Log.d("GameActivity", String.format("updateScore score:%d", score));
         setScore(score);
     }
+
 }

@@ -6,12 +6,25 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class TubeTasticGame implements ApplicationListener {
 
     public static final int COUNT_COLS = 7;
     public static final int COUNT_ROWS = 9;
+    private static final String CLASS_NAME = "TubeTasticGame";
+    private static final float SHAKE_DELTA = 2f;
+    private static final float SHAKE_INTERVAL = 0.25f;
+    private static final int SHAKE_JERKS = 7;
+    private static final float SHAKE_RESET = -5.0f;
+    private static final boolean DEBUG_MODE = true;
+
+    private static void debug(String format, Object... params) {
+        if (DEBUG_MODE) {
+            Gdx.app.log(CLASS_NAME, String.format(format, params));
+        }
+    }
 
     private GameBoard board;
     private Stage stage;
@@ -19,6 +32,11 @@ public class TubeTasticGame implements ApplicationListener {
     private int width;
     private int height;
     private boolean resume = true;
+    private float timeSinceShakeCheck;
+    private float lastAccX = 0;
+    private float lastAccY = 0;
+    private float lastAccZ = 0;
+    private int jerkCount = 0;
 
     @Override
     public void create() {
@@ -28,6 +46,8 @@ public class TubeTasticGame implements ApplicationListener {
         loadOrCreateBoard();
         Gdx.input.setInputProcessor(stage);
         configureGL();
+        timeSinceShakeCheck = 0;
+        didShake();
     }
 
     @Override
@@ -42,11 +62,48 @@ public class TubeTasticGame implements ApplicationListener {
         float delta = Gdx.graphics.getDeltaTime();
         stage.act(delta);
         stage.draw();
+        timeSinceShakeCheck += delta;
+        if (timeSinceShakeCheck > SHAKE_INTERVAL) {
+            if (didShake()) {
+                if (board.isSettled() && board.isReady()) {
+                    debug("SHAKE!!!!!!!!!");
+                    timeSinceShakeCheck = SHAKE_RESET;
+                    board.randomizeTiles();
+                    board.readyForSweep();
+                }
+            } else if(timeSinceShakeCheck > 0) {
+                timeSinceShakeCheck = 0;
+            }
+        }
+    }
+
+    private boolean didShake() {
+        float newAccX = Gdx.input.getAccelerometerX();
+        float newAccY = Gdx.input.getAccelerometerY();
+        float newAccZ = Gdx.input.getAccelerometerZ();
+        float deltaX = Math.abs(newAccX - lastAccX);
+        float deltaY = Math.abs(newAccY - lastAccY);
+        float deltaZ = Math.abs(newAccZ - lastAccZ);
+        lastAccX = newAccX;
+        lastAccY = newAccY;
+        lastAccZ = newAccZ;
+        if ((deltaX > SHAKE_DELTA) || (deltaY > SHAKE_DELTA) || (deltaZ > SHAKE_DELTA)) {
+            jerkCount++;
+            debug("didShake active jerks:%d x:%.01f y:%.01f z:%.01f", jerkCount, deltaX, deltaY, deltaZ);
+            if (jerkCount >= SHAKE_JERKS) {
+                jerkCount = 0;
+                return true;
+            }
+        } else if (jerkCount > 0) {
+            jerkCount--;
+            debug("didShake inactive jerks:%d", jerkCount);
+        }
+        return false;
     }
 
     @Override
     public void resize(int width, int height) {
-//        Gdx.app.log("TubeTasticGame", String.format("resize w:%d h:%d", width, height));
+        debug("resize w:%d h:%d", width, height);
         this.width = width;
         this.height = height;
         board.resizeToMax(width, height);
@@ -62,7 +119,7 @@ public class TubeTasticGame implements ApplicationListener {
 
     @Override
     public void resume() {
-//        Gdx.app.log("TubeTasticGame", "resume");
+//        Gdx.app.log(CLASS_NAME, "resume");
         GameBoard newBoard = loadBoard();
         if (newBoard != null) {
             stage.clear();
