@@ -6,10 +6,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.PixmapPacker;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-
-import java.util.HashMap;
 
 public class TileRenderer {
 
@@ -18,15 +16,19 @@ public class TileRenderer {
     public static final int BITS_SUNK    = 100;
     public static final int TILE_COUNT   = (16 * 3) + 2;
     public static final int SCALE_OVERSIZE = 2;
+    private static final Color COLOR_ERASE = new Color(BaseTile.COLOR_ARC.r, BaseTile.COLOR_ARC.g, BaseTile.COLOR_ARC.b, 0f);
 
-    private static class TileCacheItem {
+    private class TileCacheItem {
         int bits;
         int size;
         Texture texture;
+        TextureRegion region;
         public TileCacheItem(int bits, int size, Texture texture) {
             this.bits = bits;
             this.size = size;
             this.texture = texture;
+            this.region = new TextureRegion(texture);
+            this.region.flip(false, true);
         }
 
         @Override
@@ -43,7 +45,12 @@ public class TileRenderer {
     private SparseArray<TileCacheItem> cache;
 
     public TileRenderer() {
+        Log.d(CLASS_NAME, String.format("ctor count:%d", TILE_COUNT));
         cache = new SparseArray<TileCacheItem>(TILE_COUNT);
+    }
+
+    public TextureRegion getTextureRegionForTile(BaseTile tile) {
+        return getItemForTile(tile).region;
     }
 
     public Texture getTextureForTile(BaseTile tile) {
@@ -51,10 +58,19 @@ public class TileRenderer {
     }
 
     private static int getBitsForTile(BaseTile tile) {
-        int bits = tile.getBits();
-        switch (tile.power) {
-            case SOURCED: bits += BITS_SOURCED; break;
-            case SUNK:    bits += BITS_SUNK;    break;
+        int bits;
+        if (tile instanceof SourceTile) {
+            bits = BITS_SOURCED;
+        }
+        else if (tile instanceof SinkTile) {
+            bits = BITS_SUNK;
+        }
+        else {
+            bits = tile.getBits();
+            switch (tile.power) {
+                case SOURCED: bits += BITS_SOURCED; break;
+                case SUNK:    bits += BITS_SUNK;    break;
+            }
         }
         return bits;
     }
@@ -78,10 +94,31 @@ public class TileRenderer {
         return texture;
     }
 
+    private static void drawArc(Pixmap target, int x, int y, int innerRadius, int outerRadius) {
+        Pixmap.setBlending(Pixmap.Blending.SourceOver);
+        target.setColor(BaseTile.COLOR_ARC);
+        target.fillCircle(x, y, outerRadius);
+        Pixmap.setBlending(Pixmap.Blending.None);
+        target.setColor(COLOR_ERASE);
+        target.fillCircle(x, y, innerRadius);
+    }
+
+    private static void drawHLine(Pixmap target, int x, int y, int width, int thickness) {
+        Pixmap.setBlending(Pixmap.Blending.SourceOver);
+        target.setColor(BaseTile.COLOR_ARC);
+        target.fillRectangle(x, y - (thickness / 2), width, thickness);
+    }
+
+    private static void drawVLine(Pixmap target, int x, int y, int height, int thickness) {
+        Pixmap.setBlending(Pixmap.Blending.SourceOver);
+        target.setColor(BaseTile.COLOR_ARC);
+        target.fillRectangle(x - (thickness / 2), y, thickness, height);
+    }
+
     public static Pixmap renderPixmapForTile(BaseTile tile, int size) {
         int tileSize = size * SCALE_OVERSIZE;
         int bits = tile.getBits();
-        Gdx.app.log(CLASS_NAME, String.format("getPixmap size:%d/%d bits:%d power:%s", size, tileSize, bits, tile.power));
+//        Gdx.app.log(CLASS_NAME, String.format("getPixmap size:%d/%d bits:%d power:%s", size, tileSize, bits, tile.power));
         int halfSize = tileSize / 2;
         int padding = (int) (tileSize * BaseTile.SIZE_PADDING);
         int radius = halfSize - (padding * 2);
@@ -99,14 +136,10 @@ public class TileRenderer {
         if (tile instanceof SourceTile) {
             oversize.setColor(backColor);
             oversize.fillCircle(halfSize, halfSize, radius);
-            oversize.setColor(BaseTile.COLOR_ARC);
-            oversize.fillRectangle(halfSize, halfSize - halfArcSize, halfSize, arcSize);
         }
         else if (tile instanceof SinkTile) {
             oversize.setColor(backColor);
             oversize.fillCircle(halfSize, halfSize, radius);
-            oversize.setColor(BaseTile.COLOR_ARC);
-            oversize.fillRectangle(0, halfSize - halfArcSize, halfSize, arcSize);
         }
         else {
             int cornerRadius = padding * 2;
@@ -125,8 +158,46 @@ public class TileRenderer {
             oversize.fillCircle(rightX - cornerRadius, bottomY + cornerRadius, cornerRadius);
             oversize.fillCircle(rightX - cornerRadius, topY - cornerRadius, cornerRadius);
         }
+        Pixmap arcs = new Pixmap(tileSize, tileSize, Pixmap.Format.RGBA8888);
+        int arcLow = halfSize - halfArcSize;
+        int arcHigh = halfSize + halfArcSize;
+        if (bits == Outlets.BIT_WEST) {
+            drawHLine(arcs, 0, halfSize, halfSize, arcSize);
+        }
+        else if (bits == Outlets.BIT_SOUTH) {
+            drawVLine(arcs, halfSize, 0, halfSize, arcSize);
+        }
+        else if (bits == Outlets.BIT_EAST) {
+            drawHLine(arcs, halfSize, halfSize, halfSize, arcSize);
+        }
+        else if (bits == Outlets.BIT_NORTH) {
+            drawVLine(arcs, halfSize, halfSize, halfSize, arcSize);
+        }
+        else {
+            if ((bits & Outlets.BIT_WEST) != 0 && (bits & Outlets.BIT_SOUTH) != 0) {
+                drawArc(arcs, 0, 0, arcLow, arcHigh); // WS
+            }
+            if ((bits & Outlets.BIT_SOUTH) != 0 && (bits & Outlets.BIT_EAST) != 0) {
+                drawArc(arcs, tileSize, 0, arcLow, arcHigh); // SE
+            }
+            if ((bits & Outlets.BIT_EAST) != 0 && (bits & Outlets.BIT_NORTH) != 0) {
+                drawArc(arcs, tileSize, tileSize, arcLow, arcHigh); // EN
+            }
+            if ((bits & Outlets.BIT_WEST) != 0 && (bits & Outlets.BIT_NORTH) != 0) {
+                drawArc(arcs, 0, tileSize, arcLow, arcHigh); // WN
+            }
+            if ((bits & Outlets.BIT_WEST) != 0 && (bits & Outlets.BIT_EAST) != 0) {
+                drawHLine(arcs, 0, halfSize, tileSize, arcSize);
+            }
+            if ((bits & Outlets.BIT_SOUTH) != 0 && (bits & Outlets.BIT_NORTH) != 0) {
+                drawVLine(arcs, halfSize, 0, tileSize, arcSize);
+            }
+        }
         Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        Pixmap.setBlending(Pixmap.Blending.SourceOver);
+        Pixmap.setFilter(Pixmap.Filter.BiLinear);
         pixmap.drawPixmap(oversize, 0, 0, tileSize, tileSize, 0, 0, size, size);
+        pixmap.drawPixmap(arcs, 0, 0, tileSize, tileSize, 0, 0, size, size);
         oversize.dispose();
         return pixmap;
     }

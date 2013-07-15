@@ -3,7 +3,6 @@ package org.rickosborne.tubetastic.android;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-import com.badlogic.gdx.Gdx;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -131,7 +130,7 @@ public class BoardKeeper {
         if (!data.loadFrom(prefs)) {
             return null;
         }
-        Gdx.app.log("BoardKeeper", String.format("loadBoard c:%d r:%d t:%s s:%s", data.colCount, data.rowCount, data.tiles, data.score));
+//        Gdx.app.log("BoardKeeper", String.format("loadBoard c:%d r:%d t:%s s:%s", data.colCount, data.rowCount, data.tiles, data.score));
         GameBoard board = new GameBoard(data.colCount, data.rowCount, maxWidth, maxHeight);
         board.setScore(data.score);
         int at = 0;
@@ -146,7 +145,7 @@ public class BoardKeeper {
                 board.setTile(colNum, rowNum, type, bits);
             }
         }
-        Gdx.app.log("BoardKeeper", String.format("loadBoard loaded %d tiles", at));
+//        Gdx.app.log("BoardKeeper", String.format("loadBoard loaded %d tiles", at));
         return board;
     }
 

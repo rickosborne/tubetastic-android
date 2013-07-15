@@ -3,8 +3,8 @@ package org.rickosborne.tubetastic.android;
 import android.util.SparseArray;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
@@ -28,7 +28,6 @@ public class BaseTile extends Actor {
     public static final String DIRECTION_EAST = "E";
     public static final String DIRECTION_WEST = "W";
     public static final int DEGREES_NORTH =   0;
-    public static final int DEGREES_NORTH2 = 360;
     public static final int DEGREES_EAST  =  90;
     public static final int DEGREES_SOUTH = 180;
     public static final int DEGREES_WEST  = 270;
@@ -37,17 +36,15 @@ public class BaseTile extends Actor {
     public static final String[] outletDirections = new String[]{DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST};
     public static final SparseArray<String> directionFromDegrees;
     public static final SparseArray<OutletOffset> outletOffsets;
-    //    public static final SparseArray< HashMap< String, String > > outletRotationsReverse;
     public static final SparseArray< SparseArray< Integer > > outletRotationsReverse;
     public static final SparseArray<Integer> directionReverse;
     public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
     public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
     public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
     public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
-    public static String CACHE_KEY = "base";
     public static final float SIZE_PADDING = 1f / 16f;
     public static final float SIZE_ARCWIDTH = 1f / 12f;
-    protected static final TileRenderer renderer = new TileRenderer();
+    private TileRenderer renderer;
 
     static {
         // sweet baby Jesus, Java needs more literals
@@ -55,21 +52,15 @@ public class BaseTile extends Actor {
         for (int i = 0; i < directionCount; i++) {
             directionFromDegrees.put(outletDegrees[i], outletDirections[i]);
         }
-//        outletRotationsReverse = new SparseArray<HashMap<String, String>>(directionCount);
         outletRotationsReverse = new SparseArray<SparseArray<Integer>>(directionCount);
         outletOffsets = new SparseArray<OutletOffset>(directionCount);
         for (int degrees : outletDegrees) {
-//            HashMap<String, String> submap = new HashMap<String, String>(directionCount);
             SparseArray<Integer> submap = new SparseArray<Integer>(directionCount);
             for (int rotated : outletDegrees) {
-//                String endDirection = directionFromDegrees.get(rotated);
                 int offset = (rotated + degrees) % 360;
-//                String startDirection = directionFromDegrees.get(offset);
-//                submap.put(startDirection, endDirection);
                 submap.put(offset, rotated);
             }
             outletRotationsReverse.put(-degrees, submap);
-//            outletRotationsReverse.put(degrees, submap);
             OutletOffset offset = new OutletOffset();
             switch (degrees) {
                 case DEGREES_NORTH : offset.col =  0; offset.row = -1; break;
@@ -84,7 +75,6 @@ public class BaseTile extends Actor {
         directionReverse.put(DEGREES_EAST,  DEGREES_WEST);
         directionReverse.put(DEGREES_SOUTH, DEGREES_NORTH);
         directionReverse.put(DEGREES_WEST,  DEGREES_EAST);
-//        Tween.registerAccessor(BaseTile.class, new BaseTileTweener());
     }
 
     public static int makeId (int colNum, int rowNum) {
@@ -115,18 +105,13 @@ public class BaseTile extends Actor {
     protected Power power = Power.NONE;
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
-    protected float scale = 1f;
     protected int outletRotation = 0;
     protected float midpoint = 0f;
     protected float alpha = 0f;
     protected float padding = 0;
-    protected float arcWidth = 0;
-    protected Texture texture;
-    protected Pixmap pixmap;
 
     public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         super();
-//        Gdx.app.log(this.getClass().getSimpleName(), String.format("col:%d row%d x:%.0f y:%.0f size:%.0f", colNum, rowNum, x, y, size));
         init(colNum, rowNum, x, y, size, board);
     }
 
@@ -199,13 +184,10 @@ public class BaseTile extends Actor {
     }
 
     protected void resize(float x, float y, float size) {
-//        if (size != getWidth()) {
-//            dispose();
-//        }
-        midpoint = size * 0.5f;
-        setBounds(x, y, size, size);
-        padding = size * SIZE_PADDING;
-        arcWidth = size * SIZE_ARCWIDTH;
+        midpoint = MathUtils.floor(size * 0.5f);
+        setBounds((int) x, (int) y, midpoint * 2, midpoint * 2);
+        setOrigin(midpoint, midpoint);
+        padding = MathUtils.floor(size * SIZE_PADDING);
     }
 
     public float getAlpha() { return alpha; }
@@ -218,36 +200,21 @@ public class BaseTile extends Actor {
         this.id = makeId(colNum, rowNum);
     }
 
-    public String getCacheKey() {
-        return CACHE_KEY;
+    public void setRenderer(TileRenderer renderer) { this.renderer = renderer; }
+
+    @Override
+    public void draw(SpriteBatch batch, float parentAlpha) {
+        batch.draw(renderer.getTextureRegionForTile(this), getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
     }
-
-//    public Pixmap getPixmap() {
-//        return pixmap;
-//    }
-//
-//    public Texture getTexture() {
-//        if (texture == null) {
-//            texture = new Texture(getPixmap());
-//        }
-//        return texture;
-//    }
-//
-//    protected void dispose() {
-//        if (texture != null) {
-//            texture.dispose();
-//            texture = null;
-//        }
-//        if (pixmap != null) {
-//            pixmap.dispose();
-//            pixmap = null;
-//        }
-//    }
-//
-//    @Override
-//    protected void finalize() throws Throwable {
-//        super.finalize();
-//        dispose();
-//    }
-
 }
+
+
+
+
+
+
+
+
+
+
+

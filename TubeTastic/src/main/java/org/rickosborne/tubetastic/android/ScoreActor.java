@@ -61,7 +61,7 @@ public class ScoreActor extends Actor {
 //        shape.filledRect(getX(), getY(), getWidth(), getHeight());
 //        shape.end();
 //        batch.begin();
-        String scoreText = String.format("%d", score);
+        String scoreText = ((Integer) score).toString();
         BitmapFont.TextBounds bounds = font.getBounds(scoreText);
         font.draw(batch, scoreText, scoreX + ((getWidth() - bounds.width) * 0.5f), scoreY);
 //        super.draw(batch, parentAlpha);

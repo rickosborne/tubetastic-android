@@ -1,11 +1,7 @@
 package org.rickosborne.tubetastic.android;
 
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-
-import java.util.ArrayList;
 
 public class TubeTile extends BaseTile {
 
@@ -24,63 +20,59 @@ public class TubeTile extends BaseTile {
         }
     }
 
-    private static class OutletPath {
-        public int fromBit = 0;
-        public int toBit   = 0;
-        public OutletPath(int fromBit, int toBit) {
-            this.fromBit = fromBit;
-            this.toBit = toBit;
-        }
-    }
-
-    private static class OutletPathLine extends OutletPath {
-        private float x1;
-        private float y1;
-        private float x2;
-        private float y2;
-        public OutletPathLine(int fromBit, int toBit, float x1, float y1, float x2, float y2) {
-            super(fromBit, toBit);
-            this.x1 = x1;
-            this.y1 = y1;
-            this.x2 = x2;
-            this.y2 = y2;
-        }
-        public ShapeDrawer.LineSegmentLine segment(float size) {
-            return new ShapeDrawer.LineSegmentLine(size * x1, size * y1, size * x2, size * y2);
-        }
-    }
-
-    public static class OutletPathArc extends OutletPath {
-        private float x;
-        private float y;
-        private float r;
-        private float a1;
-        private float a2;
-        public OutletPathArc(int fromBit, int toBit, float x, float y, float r, float startDegrees, float endDegrees) {
-            super(fromBit, toBit);
-            this.x = x;
-            this.y = y;
-            this.r = r;
-            this.a1 = startDegrees * DEGREES_TO_RADIANS;
-            this.a2 = endDegrees * DEGREES_TO_RADIANS;
-        }
-        public ShapeDrawer.LineSegmentArc segment(float size) {
-            return new ShapeDrawer.LineSegmentArc(size * x, size * y, size * r, a1, a2);
-        }
-    }
+//    private static class OutletPath {
+//        public int fromBit = 0;
+//        public int toBit   = 0;
+//        public OutletPath(int fromBit, int toBit) {
+//            this.fromBit = fromBit;
+//            this.toBit = toBit;
+//        }
+//    }
+//
+//    private static class OutletPathLine extends OutletPath {
+//        private float x1;
+//        private float y1;
+//        private float x2;
+//        private float y2;
+//        public OutletPathLine(int fromBit, int toBit, float x1, float y1, float x2, float y2) {
+//            super(fromBit, toBit);
+//            this.x1 = x1;
+//            this.y1 = y1;
+//            this.x2 = x2;
+//            this.y2 = y2;
+//        }
+//        public ShapeDrawer.LineSegmentLine segment(float size) {
+//            return new ShapeDrawer.LineSegmentLine(size * x1, size * y1, size * x2, size * y2);
+//        }
+//    }
+//
+//    public static class OutletPathArc extends OutletPath {
+//        private float x;
+//        private float y;
+//        private float r;
+//        private float a1;
+//        private float a2;
+//        public OutletPathArc(int fromBit, int toBit, float x, float y, float r, float startDegrees, float endDegrees) {
+//            super(fromBit, toBit);
+//            this.x = x;
+//            this.y = y;
+//            this.r = r;
+//            this.a1 = startDegrees * DEGREES_TO_RADIANS;
+//            this.a2 = endDegrees * DEGREES_TO_RADIANS;
+//        }
+//        public ShapeDrawer.LineSegmentArc segment(float size) {
+//            return new ShapeDrawer.LineSegmentArc(size * x, size * y, size * r, a1, a2);
+//        }
+//    }
 
     private static final OutletProbability[] outletProbabilities;
-    private static final OutletPathLine[] outletPathLines;
-    private static final OutletPathArc[] outletPathArcs;
-    public static final float OFFSET_SINGLE = 0.25f;
     public static final float DURATION_VANISH = 0.500f;
     public static final float DURATION_DROP   = 0.250f;
     public static final float DURATION_SPIN   = 0.150f;
-    public static final float DEGREES_TO_RADIANS = (float) Math.PI / 180f;
-    public static final float DEGREES_SPIN = -90f;
-    public static final float DEGREES_CIRCLE = -360f;
-    public static final float OPACITY_VANISH = 0f;
-    public static final float SCALE_VANISH = 0f;
+    public static final float DEGREES_SPIN    = -90f;
+    public static final float DEGREES_CIRCLE  = -360f;
+    public static final float OPACITY_VANISH  = 0f;
+    public static final float SCALE_VANISH    = 0f;
 
 
     static {
@@ -106,23 +98,12 @@ public class TubeTile extends BaseTile {
             Outlets.BIT_SOUTH,
             Outlets.BIT_WEST
         });
-        outletPathLines = new OutletPathLine[6];
-        outletPathLines[0] = new OutletPathLine(Outlets.BIT_NORTH, Outlets.BIT_SOUTH, 0, -1, 0, 1);
-        outletPathLines[1] = new OutletPathLine(Outlets.BIT_EAST , Outlets.BIT_WEST , -1, 0, 1, 0);
-        outletPathLines[2] = new OutletPathLine(0, Outlets.BIT_NORTH, 0, 1, 0, OFFSET_SINGLE);
-        outletPathLines[3] = new OutletPathLine(0, Outlets.BIT_EAST , 1, 0, OFFSET_SINGLE, 0);
-        outletPathLines[4] = new OutletPathLine(0, Outlets.BIT_SOUTH, 0, -1, 0, -OFFSET_SINGLE);
-        outletPathLines[5] = new OutletPathLine(0, Outlets.BIT_WEST , -1, 0, -OFFSET_SINGLE, 0);
-        outletPathArcs = new OutletPathArc[4];
-        outletPathArcs[0] = new OutletPathArc(Outlets.BIT_NORTH, Outlets.BIT_EAST ,  1,  1, 1, DEGREES_SOUTH, DEGREES_WEST );
-        outletPathArcs[1] = new OutletPathArc(Outlets.BIT_EAST,  Outlets.BIT_SOUTH,  1, -1, 1, DEGREES_EAST, DEGREES_SOUTH);
-        outletPathArcs[2] = new OutletPathArc(Outlets.BIT_SOUTH, Outlets.BIT_WEST,  -1, -1, 1, DEGREES_EAST, DEGREES_NORTH);
-        outletPathArcs[3] = new OutletPathArc(Outlets.BIT_WEST , Outlets.BIT_NORTH, -1,  1, 1, DEGREES_NORTH2, DEGREES_EAST);
-        CACHE_KEY = "t%d";
     }
 
     private int spinRemain = 0;
-    private boolean ready = false;
+    private boolean isSpinning = false;
+    private boolean isVanishing = false;
+    private boolean isDropping = false;
 
     public TubeTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
         super(colNum, rowNum, x, y, size, board);
@@ -134,12 +115,6 @@ public class TubeTile extends BaseTile {
         init(colNum, rowNum, x, y, size, bits, board);
     }
 
-//    @Override
-//    public String toString() {
-//        return String.format("%s", // %s%s%s%s
-//                super.toString() //,        );
-//    }
-
     public void init(int colNum, int rowNum, float x, float y, float size, int bits, final GameBoard board) {
         super.init(colNum, rowNum, x, y, size, board);
         if (bits <= 0) {
@@ -149,7 +124,6 @@ public class TubeTile extends BaseTile {
             outlets = new Outlets(bits);
         }
         resize(x, y, size);
-        ready = true;
     }
 
     private void setRandomOutlets() {
@@ -162,25 +136,17 @@ public class TubeTile extends BaseTile {
         }
     }
 
-//    @Override
-//    public void setPower(Power power) {
-//        if (power == this.power) {
-//            return;
-//        }
-//        this.power = power;
-//        // ... animate
-//    }
-
     public void setBits(int bits) { outlets.setBits(bits); }
-    public void setReady(boolean ready) { this.ready = ready; }
 
     public void spin() {
 //        Gdx.app.log(toString(), String.format("spin remain:%d", spinRemain));
         final TubeTile self = this;
+        board.interruptSweep();
         if (spinRemain > 0) {
-            ready = false;
-            spinRemain--;
+            isSpinning = true;
             setPower(Power.NONE);
+            spinRemain--;
+//            Gdx.app.log(toString(), String.format("spin start remain:%d", spinRemain));
             addAction(Actions.sequence(
                     Actions.rotateBy(DEGREES_SPIN, DURATION_SPIN),
                     Actions.run(new Runnable() {
@@ -191,24 +157,23 @@ public class TubeTile extends BaseTile {
                         }
                     })
             ));
-            board.interruptSweep();
         }
         else {
-            outletRotation = Math.round(getRotation());
-//            Gdx.app.log(toString(), String.format("done spinning to:%d", outletRotation));
+            outletRotation = MathUtils.round(getRotation());
             int newRotation = outletRotation % 360;
+//            Gdx.app.log(toString(), String.format("done spinning to:%d/%d", outletRotation, newRotation));
             if (newRotation != outletRotation) {
 //                Gdx.app.log(toString(), String.format("rotate reset %d -> %d", outletRotation, newRotation));
                 outletRotation = newRotation;
                 setRotation(newRotation);
             }
-            ready = true;
+            isSpinning = false;
             board.readyForSweep();
         }
     }
 
     public void vanish() {
-        ready = false;
+        isVanishing = true;
         setPower(Power.NONE);
         if (board.isSettled()) {
             final TubeTile self = this;
@@ -234,12 +199,12 @@ public class TubeTile extends BaseTile {
     }
 
     public void dropTo(final int colNum, final int rowNum, final float x, final float y) {
-        ready = false;
+        isDropping = true;
         setPower(Power.NONE);
         final TubeTile self = this;
         if (board.isSettled()) {
             addAction(Actions.sequence(
-                    Actions.moveTo(x, y, DURATION_DROP),
+                    Actions.moveTo((int) x, (int) y, DURATION_DROP),
                     Actions.run(new Runnable() {
                         @Override
                         public void run() {
@@ -251,7 +216,7 @@ public class TubeTile extends BaseTile {
         }
         else {
 //            Gdx.app.log(self.toString(), String.format("auto-droppedTo col:%d row:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
-            setPosition(x, y);
+            setPosition((int) x, (int) y);
             onDropComplete(colNum, rowNum);
         }
     }
@@ -259,78 +224,25 @@ public class TubeTile extends BaseTile {
     public void onDropComplete(int colNum, int rowNum) {
         setColRow(colNum, rowNum);
         board.tileDropComplete(this, colNum, rowNum);
-        setReady(true);
+        isDropping = false;
     }
 
     public void onVanishComplete() {
         board.tileVanishComplete(this);
     }
 
-    @Override
-    public void draw(SpriteBatch batch, float parentAlpha) {
-        batch.draw(renderer.getTextureForTile(this), getX(), getY(), getWidth(), getHeight());
-//        batch.end();
-//        ShapeRenderer shape = new ShapeRenderer();
-//        ShapeRenderer shape = ShapeRendererSingleton.INSTANCE.getShape();
-//        float x = getX();
-//        float y = getY();
-//        float width = getWidth();
-//        float height = getHeight();
-//        Color backColor = arcShadow(power).cpy();
-//        float alpha = getAlpha();
-//        float degrees = getRotation();
-//        float scaleX = getScaleX();
-//        float scaleY = getScaleY();
-//        backColor.a = alpha;
-//        ShapeDrawer.roundRect(shape, x + padding, y + padding, width - (2 * padding), height - (2 * padding), padding * 2, backColor, degrees, scaleX, scaleY);
-//        ArrayList<ShapeDrawer.LineSegmentLine> lines = new ArrayList<ShapeDrawer.LineSegmentLine>(outletPathLines.length);
-//        float midX = x + midpoint;
-//        float midY = y + midpoint;
-//        int bits = outlets.getBits();
-//        for (OutletPathLine line : outletPathLines) {
-//            if (((line.fromBit == 0) && (bits == line.toBit)) || (((bits & line.fromBit) != 0) && ((bits & line.toBit) != 0))) {
-//                lines.add(line.segment(midpoint));
-//            }
-//        }
-//        Color arcColor = COLOR_ARC.cpy();
-//        arcColor.a = alpha;
-//        if (lines.size() > 0) {
-//            ShapeDrawer.renderLineSegments(shape, lines, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
-//        }
-//        ArrayList<ShapeDrawer.LineSegmentArc> arcs = new ArrayList<ShapeDrawer.LineSegmentArc>(outletPathArcs.length);
-//        for (OutletPathArc arc : outletPathArcs) {
-//            if (((bits & arc.fromBit) != 0) && ((bits & arc.toBit) != 0)) {
-//                arcs.add(arc.segment(midpoint));
-//            }
-//        }
-//        if (arcs.size() > 0) {
-//            ShapeDrawer.renderArcSegments(shape, arcs, arcColor, arcWidth, degrees, midX, midY, scaleX, scaleY);
-//        }
-//        batch.begin();
-    }
-
-    /*
-    @Override
-    public Actor hit (float x, float y, boolean touchable) {
-        Actor target = super.hit(x, y, touchable);
-        Gdx.app.log(toString(), String.format("hit x:%.0f y:%.0f t:%b %s", x, y, touchable, target != null ? "!!!!!" : ""));
-        return target;
-    }
-    */
-
     public void onTouchDown() {
 //        Gdx.app.log(toString(), String.format("touchDown boardReady:%b tileReady:%b remain:%d", board.isReady(), ready, spinRemain));
-        if (board.isReady()) {
-            spinRemain++;
-            if (ready) {
+        if (board.isReady() && !isVanishing && !isDropping) {
+            if (isSpinning) {
+                spinRemain++;
+//                Gdx.app.log(toString(), String.format("spin add %d", spinRemain));
+            } else {
+                spinRemain = 1;
+//                Gdx.app.log(toString(), String.format("spin start %d", spinRemain));
                 spin();
             }
         }
-    }
-
-    @Override
-    public String getCacheKey() {
-        return String.format(CACHE_KEY, outlets.getBits());
     }
 
 }

@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 import java.util.ArrayDeque;
@@ -38,6 +38,7 @@ public class GfxCacheListener implements ApplicationListener {
     private int tileY;
     private ArrayDeque<BaseTile> renderQueue;
     private Actor lastTile;
+    private final TileRenderer renderer = new TileRenderer();
 
     @Override
     public void create() {
@@ -47,22 +48,49 @@ public class GfxCacheListener implements ApplicationListener {
         tileSize = getTileSize(TubeTasticGame.COUNT_COLS, TubeTasticGame.COUNT_ROWS, width, height);
         tileX = (width - tileSize) / 2;
         tileY = (height - tileSize) / 2;
-        Gdx.app.log(CLASS_NAME, String.format("create tileSize:%d", tileSize));
+//        Gdx.app.log(CLASS_NAME, String.format("create tileSize:%d", tileSize));
         renderQueue = new ArrayDeque<BaseTile>(RENDER_COUNT);
-//        renderQueue.add(new SourceTile(0, 0, tileX, tileY, tileSize, null));
-//        renderQueue.add(new SinkTile(0, 0, tileX, tileY, tileSize, null));
-        renderQueue.add(new TubeTile(0, 0, tileX, tileY, tileSize, 15, null));
-//        for (BaseTile.Power power : BaseTile.Power.values()) {
-//            for (int bits = 1; bits <= 16; bits++) {
-//                TubeTile tile = new TubeTile(0, 0, tileX, tileY, tileSize, bits, null);
-//                tile.setPower(power);
-//                renderQueue.add(tile);
-//            }
-//        }
+        renderQueue.add(new SourceTile(0, 0, tileX, tileY, tileSize, null));
+        renderQueue.add(new SinkTile(0, 0, tileX, tileY, tileSize, null));
+        for (BaseTile.Power power : BaseTile.Power.values()) {
+            for (int bits = 1; bits < 16; bits++) {
+                TubeTile tile = new TubeTile(0, 0, tileX, tileY, tileSize, bits, null);
+                tile.setPower(power);
+                renderQueue.add(tile);
+            }
+        }
         lastTile = null;
+        lastTile = renderQueue.pop();
+        ((BaseTile) lastTile).setRenderer(renderer);
+        stage.addActor(lastTile);
         configureGL();
-        Gdx.graphics.setContinuousRendering(false);
+//        Gdx.graphics.setContinuousRendering(false);
 //        Gdx.graphics.requestRendering();
+        Gdx.input.setInputProcessor(stage);
+        stage.addListener(new InputListener(){
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                lastTile.addAction(Actions.sequence(
+                        Actions.rotateBy(-360, 1f),
+                        Actions.run(new Runnable() {
+                            @Override
+                            public void run() {
+                                lastTile.remove();
+                                stage.clear();
+                                lastTile = renderQueue.pop();
+                                if (lastTile == null) {
+                                    onCompleteCallback.run();
+                                }
+                                else {
+                                    ((BaseTile) lastTile).setRenderer(renderer);
+                                    stage.addActor(lastTile);
+                                }
+                            }
+                        })
+                ));
+                return super.touchDown(event, x, y, pointer, button);
+            }
+        });
     }
 
     @Override
@@ -76,14 +104,11 @@ public class GfxCacheListener implements ApplicationListener {
     @Override
     public void render() {
 //        if (renderQueue.size() > 0) {
-            if (lastTile != null) {
-                lastTile.remove();
-            }
-        if (lastTile == null) {
-            lastTile = renderQueue.pop();
-            stage.addActor(lastTile);
-        }
-        Gdx.app.log(CLASS_NAME, "render");
+//            if (lastTile != null) {
+//                stage.clear();
+//                lastTile.remove();
+//            }
+//        Gdx.app.log(CLASS_NAME, "render");
             Gdx.gl.glClearColor(0, 0, 0, 1);
             Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
             float delta = Gdx.graphics.getDeltaTime();
