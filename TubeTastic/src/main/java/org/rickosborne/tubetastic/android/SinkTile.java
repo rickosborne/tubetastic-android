@@ -4,6 +4,10 @@ import com.badlogic.gdx.graphics.Color;
 
 public class SinkTile extends BaseTile {
 
+    static {
+        CLASS_NAME = "SinkTile";
+        DEBUG_MODE = false;
+    }
     public static final Color COLOR_SINK = new Color(1.0f, 0.5f, 0.25f, 1.0f);
 
     public SinkTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {

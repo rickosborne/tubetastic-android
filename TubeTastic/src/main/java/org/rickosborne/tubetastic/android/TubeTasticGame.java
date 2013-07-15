@@ -9,21 +9,18 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
-public class TubeTasticGame implements ApplicationListener {
+public class TubeTasticGame extends Debuggable implements ApplicationListener {
 
     public static final int COUNT_COLS = 7;
     public static final int COUNT_ROWS = 9;
-    private static final String CLASS_NAME = "TubeTasticGame";
     private static final float SHAKE_DELTA = 2f;
     private static final float SHAKE_INTERVAL = 0.25f;
     private static final int SHAKE_JERKS = 7;
     private static final float SHAKE_RESET = -5.0f;
-    private static final boolean DEBUG_MODE = true;
 
-    private static void debug(String format, Object... params) {
-        if (DEBUG_MODE) {
-            Gdx.app.log(CLASS_NAME, String.format(format, params));
-        }
+    static {
+        CLASS_NAME = "TubeTasticGame";
+        DEBUG_MODE = true;
     }
 
     private GameBoard board;

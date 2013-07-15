@@ -1,16 +1,20 @@
 package org.rickosborne.tubetastic.android;
 
 import android.util.SparseArray;
-import com.badlogic.gdx.Gdx;
+import android.util.SparseIntArray;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BaseTile extends Actor {
+public class BaseTile extends DebuggableActor {
+
+    static {
+        CLASS_NAME = "BaseTile";
+        DEBUG_MODE = false;
+    }
 
     private static final class OutletOffset {
         public int col = 0;
@@ -36,8 +40,8 @@ public class BaseTile extends Actor {
     public static final String[] outletDirections = new String[]{DIRECTION_NORTH, DIRECTION_EAST, DIRECTION_SOUTH, DIRECTION_WEST};
     public static final SparseArray<String> directionFromDegrees;
     public static final SparseArray<OutletOffset> outletOffsets;
-    public static final SparseArray< SparseArray< Integer > > outletRotationsReverse;
-    public static final SparseArray<Integer> directionReverse;
+    public static final SparseArray<SparseIntArray> outletRotationsReverse;
+    public static final SparseIntArray directionReverse;
     public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
     public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
     public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
@@ -52,10 +56,10 @@ public class BaseTile extends Actor {
         for (int i = 0; i < directionCount; i++) {
             directionFromDegrees.put(outletDegrees[i], outletDirections[i]);
         }
-        outletRotationsReverse = new SparseArray<SparseArray<Integer>>(directionCount);
+        outletRotationsReverse = new SparseArray<SparseIntArray>(directionCount);
         outletOffsets = new SparseArray<OutletOffset>(directionCount);
         for (int degrees : outletDegrees) {
-            SparseArray<Integer> submap = new SparseArray<Integer>(directionCount);
+            SparseIntArray submap = new SparseIntArray(directionCount);
             for (int rotated : outletDegrees) {
                 int offset = (rotated + degrees) % 360;
                 submap.put(offset, rotated);
@@ -70,7 +74,7 @@ public class BaseTile extends Actor {
             }
             outletOffsets.put(degrees, offset);
         }
-        directionReverse = new SparseArray<Integer>(directionCount);
+        directionReverse = new SparseIntArray(directionCount);
         directionReverse.put(DEGREES_NORTH, DEGREES_SOUTH);
         directionReverse.put(DEGREES_EAST,  DEGREES_WEST);
         directionReverse.put(DEGREES_SOUTH, DEGREES_NORTH);
@@ -88,15 +92,6 @@ public class BaseTile extends Actor {
             }
         }
         return 0;
-    }
-
-    public static Color arcShadow(Power power) {
-        switch (power) {
-            case NONE:    return COLOR_POWER_NONE;
-            case SOURCED: return COLOR_POWER_SOURCED;
-            case SUNK:    return COLOR_POWER_SUNK;
-        }
-        return null;
     }
 
     protected int colNum = 0;
@@ -129,17 +124,17 @@ public class BaseTile extends Actor {
 
     public boolean hasOutletTo(int degrees) {
         boolean ret = false;
-        SparseArray<Integer> originalMap = outletRotationsReverse.get(outletRotation);
+        SparseIntArray originalMap = outletRotationsReverse.get(outletRotation);
         if (originalMap != null) {
-            Integer originalDegrees = originalMap.get(degrees);
-            if (originalDegrees != null) {
+            int originalDegrees = originalMap.get(degrees, -1);
+            if (originalDegrees > -1) {
                 ret = this.outlets.hasOutlet(originalDegrees);
-//                Gdx.app.log(toString(), String.format("hasOutletTo(orig:%d + rot:%d = %d) = %b", originalDegrees, outletRotation, degrees, ret));
+                debug("hasOutletTo(orig:%d + rot:%d = %d) = %b", originalDegrees, outletRotation, degrees, ret);
             } else {
-                Gdx.app.error(toString(), String.format("hasOutletTo(orig:? + rot:%d = %d) missing original degrees", outletRotation, degrees));
+                error("hasOutletTo(orig:? + rot:%d = %d) missing original degrees", outletRotation, degrees);
             }
         } else {
-            Gdx.app.error(toString(), String.format("hasOutletTo(orig:? + rot:%d = %d) missing reverse", outletRotation, degrees));
+            error("hasOutletTo(orig:? + rot:%d = %d) missing reverse", outletRotation, degrees);
         }
         return ret;
     }
@@ -167,7 +162,6 @@ public class BaseTile extends Actor {
     }
 
     public void setPower(Power power) {
-//        Gdx.app.log(toString(), String.format("power %s -> %s", this.power, power));
         this.power = power;
     }
 

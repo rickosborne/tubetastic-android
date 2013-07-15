@@ -1,18 +1,19 @@
 package org.rickosborne.tubetastic.android;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.utils.Array;
 
 import java.util.HashSet;
 
-public class GameBoard extends Group {
+public class GameBoard extends DebuggableGroup {
+
+    static {
+        CLASS_NAME = "GameBoard";
+        DEBUG_MODE = false;
+    }
 
     public static final float DELAY_SWEEP = 0.125f;
-    public static final String CLASS_NAME = "GameBoard";
 
     public static enum TILE_TYPE {
         SOURCE,
@@ -27,8 +28,6 @@ public class GameBoard extends Group {
     private int score = 0;
     private float tileSize = 0;
     private boolean ready = false;
-//    private boolean needPowerSweep = false;
-//    private boolean interruptPowerSweep = false;
     private boolean awaitingSweep = false;
     private BoardSweeper sweeper;
     private final float SCORE_HEIGHT = 0.08f;
@@ -39,7 +38,7 @@ public class GameBoard extends Group {
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
-//        Gdx.app.log("GameBoard", String.format("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight));
+        debug("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight);
         init(colCount, rowCount, maxWidth, maxHeight);
     }
 
@@ -57,6 +56,7 @@ public class GameBoard extends Group {
     }
 
     public void randomizeTiles() {
+        debug("randomizing tiles");
         ready = false;
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
@@ -89,16 +89,15 @@ public class GameBoard extends Group {
                 try {
                     if (!event.isHandled() && self.isReady() && self.isSettled()) {
                         Actor target = event.getTarget();
-//                        Gdx.app.log("GameBoard;" + event.getTarget().getClass().getSimpleName(), String.format("touchDown x:%.0f y:%.0f", x, y));
+                        debug("touchDown x:%.0f y:%.0f target:%s", x, y, target == null ? "null" : target);
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
-//                            toggleContinuousRendering(true);
                             ((TubeTile) tile).onTouchDown();
                         }
                     }
                 }
                 catch (Exception e) {
-                    Gdx.app.error("GameBoard;" + event.getTarget().getClass().getSimpleName(), "touch exception:" + e.toString());
+                    error("touch exception: %s", e.toString());
                 }
                 return true;
             }
@@ -135,7 +134,6 @@ public class GameBoard extends Group {
     public BaseTile tileAt(float x, float y) {
         int colNum = (int) (x / tileSize);
         int rowNum = rowCount - 1 - ((int) ((y - scoreHeight) / tileSize));
-//        Gdx.app.log("GameBoard", String.format("tileAt c:%d r:%d x:%.0f y:%.0f", colNum, rowNum, x, y));
         return getTile(colNum, rowNum);
     }
 
@@ -148,10 +146,6 @@ public class GameBoard extends Group {
 
     public BaseTile setTile(int colNum, int rowNum, BaseTile tile) {
         if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
-//            BaseTile existing = board[rowNum][colNum];
-//            if (existing != null) {
-//                removeActor(existing);
-//            }
             board[rowNum][colNum] = tile;
             if (tile != null) {
                 addActor(tile);
@@ -199,9 +193,9 @@ public class GameBoard extends Group {
     public void addScore(int score) { setScore(this.score + score); }
 
     private void powerSweep() {
-        Gdx.app.log(CLASS_NAME, "powerSweep begin");
+        debug("powerSweep begin");
         if (!awaitingSweep) {
-            Gdx.app.log(CLASS_NAME, "powerSweep not awaitingSweep");
+            debug("powerSweep not awaitingSweep");
             return;
         }
         awaitingSweep = false;
@@ -216,33 +210,33 @@ public class GameBoard extends Group {
             if ((tilePower == null) || (tilePower.tile == null)) {
                 continue;
             }
-            Gdx.app.log(tilePower.tile.toString(), String.format("power %s -> %s", tilePower.tile.power, tilePower.power));
+            debug("%s power %s -> %s", tilePower.tile.toString(), tilePower.tile.power, tilePower.power);
             tilePower.tile.setPower(tilePower.power);
         }
         // gather any connected tiles
         if (sweeper.connected.isEmpty()) {
-            Gdx.app.log(CLASS_NAME, "ready");
+            debug("ready");
             ready = true;
             settled = true;
         } else {
             sweeper.trackDrops(this);
-            Gdx.app.log(CLASS_NAME, String.format("vanishing %d", sweeper.vanished.size()));
+            debug("vanishing %d", sweeper.vanished.size());
             for (TubeTile vanishTile : new HashSet<TubeTile>(sweeper.vanished)) {
                 if (vanishTile != null) {
-                    Gdx.app.log(CLASS_NAME, String.format("vanishing %s", vanishTile));
+                    debug("vanishing %s", vanishTile);
                     vanishTile.vanish();
                 }
             }
             if (settled) {
-                Gdx.app.log(CLASS_NAME, String.format("score %d + %d", score, sweeper.vanished.size()));
+                debug("score %d + %d", score, sweeper.vanished.size());
                 score += sweeper.vanished.size();
                 scoreBoard.setScore(score);
             } else {
-                Gdx.app.log(CLASS_NAME, "not settled");
+                debug("not settled");
                 readyForSweep();
             }
         }
-        Gdx.app.log(CLASS_NAME, "powerSweep done");
+        debug("powerSweep done");
     }
 
     public BaseTile tileAt(int colNum, int rowNum) {
@@ -258,16 +252,16 @@ public class GameBoard extends Group {
 
     public void tileDropComplete(TubeTile tile, int destinationColNum, int destinationRowNum) {
         if (sweeper.fell.contains(tile)) {
-//            Gdx.app.log("GameBoard", String.format("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size()));
+            debug("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size());
             setTile(destinationColNum, destinationRowNum, tile);
             sweeper.fell.remove(tile);
             if (sweeper.fell.isEmpty()) {
-//                Gdx.app.log("GameBoard", "drop complete");
+                debug("drop complete");
                 readyForSweep();
-                Gdx.app.log("GameBoard", String.format("memory %d %d", Gdx.app.getNativeHeap(), Gdx.app.getJavaHeap()));
+                debug("memory %d %d", Gdx.app.getNativeHeap(), Gdx.app.getJavaHeap());
             }
         } else {
-            Gdx.app.error("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size()));
+            error("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size());
         }
     }
 
@@ -278,16 +272,14 @@ public class GameBoard extends Group {
             removeActor(vanishedTile);
             sweeper.vanished.remove(vanishedTile);
             if (sweeper.vanished.isEmpty()) {
-//                Gdx.app.log("GameBoard", String.format("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size()));
+                debug("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size());
                 for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
-//                    Gdx.app.log("GameBoard", String.format("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY));
+                    debug("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY);
                     setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
                     sweeper.fell.add(droppedTile.tile);
                 }
                 for (BoardSweeper.DroppedTile addedTile : sweeper.added) {
                     addedTile.tile = setTile(addedTile.colX, addedTile.rowY);
-//                    TubeTile tile = new TubeTile(-2, -2, addedTile.colX, addedTile.rowY, tileSize, this);
-//                    addActor(tile);
                     sweeper.fell.add(addedTile.tile);
                 }
                 for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
@@ -298,18 +290,18 @@ public class GameBoard extends Group {
                 }
             }
         } else {
-            Gdx.app.error("GameBoard", String.format("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
+            error("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size());
         }
     }
 
     public void interruptSweep() {
-        Gdx.app.log(CLASS_NAME, String.format("interruptSweep %b -> false, actions:%d", awaitingSweep, getActions().size));
+        debug("interruptSweep %b -> false, actions:%d", awaitingSweep, getActions().size);
         awaitingSweep = false;
         clearActions();
     }
 
     public void readyForSweep() {
-        Gdx.app.log(CLASS_NAME, String.format("readyForSweep %b -> true, actions:%d", awaitingSweep, getActions().size));
+        debug("readyForSweep %b -> true, actions:%d", awaitingSweep, getActions().size);
         final GameBoard self = this;
         awaitingSweep = true;
         clearActions();

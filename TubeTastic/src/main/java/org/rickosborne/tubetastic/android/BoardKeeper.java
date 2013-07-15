@@ -2,11 +2,15 @@ package org.rickosborne.tubetastic.android;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class BoardKeeper {
+public class BoardKeeper extends Debuggable {
+
+    static {
+        CLASS_NAME = "BoardKeeper";
+        DEBUG_MODE = false;
+    }
 
     private static String PREFS_BOARD_TILES;
 
@@ -28,7 +32,7 @@ public class BoardKeeper {
                     return obj.getInt(key);
                 }
                 catch (JSONException e) {
-                    Log.e("BoardKeeper.SaveGameData", String.format("getJsonValue %s %d: %s", key, defaultValue, e.toString()));
+                    error("getJsonValue<int> %s %d: %s", key, defaultValue, e.toString());
                 }
             }
             return defaultValue;
@@ -43,7 +47,7 @@ public class BoardKeeper {
                     }
                 }
                 catch (JSONException e) {
-                    Log.e("BoardKeeper.SaveGameData", String.format("getJsonValue %s %s: %s", key, defaultValue, e.toString()));
+                    error("getJsonValue<String> %s %s: %s", key, defaultValue, e.toString());
                 }
             }
             return defaultValue;
@@ -77,7 +81,7 @@ public class BoardKeeper {
         public Boolean loadFrom(SharedPreferences prefs) {
             String json = prefs.getString(PREFS_BOARD_TILES, "");
             if (json.isEmpty()) {
-                Log.d("BoardKeeper.SaveGameData", "No tiles");
+                debug("No tiles");
                 return false;
             }
             try {
@@ -91,11 +95,11 @@ public class BoardKeeper {
                     return true;
                 }
                 else {
-                    Log.e("BoardKeeper", String.format("loadBoard MISMATCH %d * %d != %d", colCount, rowCount, tileCount));
+                    error("loadBoard MISMATCH %d * %d != %d", colCount, rowCount, tileCount);
                 }
             }
             catch (JSONException e) {
-                Log.e("BoardKeeper.SaveGameData", String.format("loadBoard exception:"));
+                error("loadBoard exception: %s", e);
             }
             return false;
         }
@@ -130,7 +134,7 @@ public class BoardKeeper {
         if (!data.loadFrom(prefs)) {
             return null;
         }
-//        Gdx.app.log("BoardKeeper", String.format("loadBoard c:%d r:%d t:%s s:%s", data.colCount, data.rowCount, data.tiles, data.score));
+        debug("loadBoard c:%d r:%d t:%s s:%s", data.colCount, data.rowCount, data.tiles, data.score);
         GameBoard board = new GameBoard(data.colCount, data.rowCount, maxWidth, maxHeight);
         board.setScore(data.score);
         int at = 0;
@@ -145,13 +149,13 @@ public class BoardKeeper {
                 board.setTile(colNum, rowNum, type, bits);
             }
         }
-//        Gdx.app.log("BoardKeeper", String.format("loadBoard loaded %d tiles", at));
+        debug("loadBoard loaded %d tiles", at);
         return board;
     }
 
     public Boolean couldResumeGame() {
         Boolean couldResume = (new SaveGameData()).loadFrom(prefs);
-        Log.d("BoardKeeper", String.format("couldResumeGame %b", couldResume));
+        debug("couldResumeGame %b", couldResume);
         return couldResume;
     }
 

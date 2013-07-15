@@ -3,33 +3,21 @@ package org.rickosborne.tubetastic.android;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.utils.ScreenUtils;
-
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 
-public class GfxCacheListener implements ApplicationListener {
+public class GfxCacheListener extends Debuggable implements ApplicationListener {
 
-    public static String CLASS_NAME = "GfxCacheListener";
-    public static int RENDER_COUNT = (16 * 3) + 2; // 16 outlets, 3 colors, 2 extra
-
-    private static class RenderItem {
-        public String key;
-        public BaseTile tile;
-        public RenderItem(String key, BaseTile tile) {
-            this.key = key;
-            this.tile = tile;
-        }
+    static {
+        CLASS_NAME = "GfxCacheListener";
+        DEBUG_MODE = false;
     }
 
+    public static int RENDER_COUNT = (16 * 3) + 2; // 16 outlets, 3 colors, 2 extra
+
     private Runnable onCompleteCallback;
-    private OrthographicCamera camera;
     private Stage stage;
     private int width;
     private int height;
@@ -48,7 +36,7 @@ public class GfxCacheListener implements ApplicationListener {
         tileSize = getTileSize(TubeTasticGame.COUNT_COLS, TubeTasticGame.COUNT_ROWS, width, height);
         tileX = (width - tileSize) / 2;
         tileY = (height - tileSize) / 2;
-//        Gdx.app.log(CLASS_NAME, String.format("create tileSize:%d", tileSize));
+        debug("create tileSize:%d", tileSize);
         renderQueue = new ArrayDeque<BaseTile>(RENDER_COUNT);
         renderQueue.add(new SourceTile(0, 0, tileX, tileY, tileSize, null));
         renderQueue.add(new SinkTile(0, 0, tileX, tileY, tileSize, null));
@@ -64,8 +52,6 @@ public class GfxCacheListener implements ApplicationListener {
         ((BaseTile) lastTile).setRenderer(renderer);
         stage.addActor(lastTile);
         configureGL();
-//        Gdx.graphics.setContinuousRendering(false);
-//        Gdx.graphics.requestRendering();
         Gdx.input.setInputProcessor(stage);
         stage.addListener(new InputListener(){
             @Override

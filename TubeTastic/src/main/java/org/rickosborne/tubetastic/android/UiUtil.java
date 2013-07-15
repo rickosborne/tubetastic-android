@@ -33,8 +33,8 @@ public class UiUtil {
             tf = getFont(ctx, asset);
             if (textViewOrButton instanceof TextView) {
                 ((TextView) textViewOrButton).setTypeface(tf);
-            } else {
-                ((Button) textViewOrButton).setTypeface(tf);
+//            } else if (textViewOrButton instanceof Button) {
+//                ((Button) textViewOrButton).setTypeface(tf);
             }
         } catch (Exception e) {
             Log.e(TAG, "Could not get typeface: " + asset, e);

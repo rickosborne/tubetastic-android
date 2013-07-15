@@ -2,16 +2,19 @@ package org.rickosborne.tubetastic.android;
 
 import android.util.Log;
 import android.util.SparseArray;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 
-public class TileRenderer {
+public class TileRenderer extends Debuggable {
 
-    public static final String CLASS_NAME = "TileRenderer";
+    static {
+        CLASS_NAME = "TileRenderer";
+        DEBUG_MODE = false;
+    }
+
     public static final int BITS_SOURCED = 400;
     public static final int BITS_SUNK    = 100;
     public static final int TILE_COUNT   = (16 * 3) + 2;
@@ -34,7 +37,7 @@ public class TileRenderer {
         @Override
         protected void finalize() throws Throwable {
             super.finalize();
-//            Log.d("TileCacheItem", String.format("finalize bits:%d size:%d", bits, size));
+            debug("finalize bits:%d size:%d", bits, size);
             if (texture != null) {
                 texture.dispose();
                 texture = null;
@@ -118,7 +121,7 @@ public class TileRenderer {
     public static Pixmap renderPixmapForTile(BaseTile tile, int size) {
         int tileSize = size * SCALE_OVERSIZE;
         int bits = tile.getBits();
-//        Gdx.app.log(CLASS_NAME, String.format("getPixmap size:%d/%d bits:%d power:%s", size, tileSize, bits, tile.power));
+        debug("getPixmap size:%d/%d bits:%d power:%s", size, tileSize, bits, tile.power);
         int halfSize = tileSize / 2;
         int padding = (int) (tileSize * BaseTile.SIZE_PADDING);
         int radius = halfSize - (padding * 2);

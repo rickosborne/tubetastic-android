@@ -1,20 +1,19 @@
 package org.rickosborne.tubetastic.android;
 
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
-public class GameActivity extends AndroidApplication {
+public class GameActivity extends DebuggableAndroidApplication {
 
     public final static String ARG_RESUME = "resume";
     public final static String ARG_SCORE  = "score";
+    static {
+        CLASS_NAME = "GameActivity";
+        DEBUG_MODE = false;
+    }
 
     private TubeTasticGame game;
 
@@ -30,7 +29,7 @@ public class GameActivity extends AndroidApplication {
         game = new TubeTasticGame();
         game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        Log.d("GameActivity", String.format("onCreate resume:%b", wantResume));
+        debug("onCreate resume:%b", wantResume);
         game.setResume(wantResume);
         initialize(game, cfg);
     }
@@ -40,7 +39,7 @@ public class GameActivity extends AndroidApplication {
         super.onResume();
         game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        Log.d("GameActivity", String.format("onResume resume:%b", wantResume));
+        debug("onResume resume:%b", wantResume);
         game.setResume(wantResume);
     }
 
@@ -64,12 +63,12 @@ public class GameActivity extends AndroidApplication {
         Intent result = new Intent();
         result.putExtra(ARG_SCORE, score);
         setResult(RESULT_OK, result);
-        Log.d("GameActivity", String.format("setScore score:%d", score));
+        debug("setScore score:%d", score);
     }
 
     private void updateScore() {
         int score = game.getScore();
-        Log.d("GameActivity", String.format("updateScore score:%d", score));
+        debug("updateScore score:%d", score);
         setScore(score);
     }
 
