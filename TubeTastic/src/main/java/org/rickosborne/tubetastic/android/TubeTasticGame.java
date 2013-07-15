@@ -15,7 +15,7 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
     public static final int COUNT_ROWS = 9;
     private static final float SHAKE_DELTA = 2f;
     private static final float SHAKE_INTERVAL = 0.25f;
-    private static final int SHAKE_JERKS = 7;
+    private static final int SHAKE_JERKS = 8;
     private static final float SHAKE_RESET = -5.0f;
 
     static {
@@ -45,6 +45,7 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
         configureGL();
         timeSinceShakeCheck = 0;
         didShake();
+        board.addGameEventListener(new GameSound());
     }
 
     @Override

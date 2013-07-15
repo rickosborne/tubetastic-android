@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import java.util.HashSet;
+import java.util.Set;
 
 public class GameBoard extends DebuggableGroup {
 
@@ -21,6 +22,15 @@ public class GameBoard extends DebuggableGroup {
         SINK
     }
 
+    public static enum EVENT_TYPE {
+        TILE_SPIN,
+        TILES_VANISH,
+        TILES_DROP,
+        BOARD_VANISH,
+        BOARD_RANDOM,
+        BOARD_SETTLE
+    }
+
     private int rowCount = 0;
     private int colCount = 0;
     private BaseTile[][] board;
@@ -35,6 +45,7 @@ public class GameBoard extends DebuggableGroup {
     private ScoreActor scoreBoard;
     private ScoreKeeper scoreKeeper;
     protected final TileRenderer renderer = new TileRenderer();
+    protected HashSet<GameEventListener> eventListeners = new HashSet<GameEventListener>();
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
@@ -79,6 +90,7 @@ public class GameBoard extends DebuggableGroup {
                 setTile(colNum, rowNum, type, 0);
             }
         }
+        notifyListeners(EVENT_TYPE.BOARD_RANDOM);
     }
 
     public void begin() {
@@ -92,6 +104,7 @@ public class GameBoard extends DebuggableGroup {
                         debug("touchDown x:%.0f y:%.0f target:%s", x, y, target == null ? "null" : target);
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
+                            self.notifyListeners(EVENT_TYPE.TILE_SPIN, tile);
                             ((TubeTile) tile).onTouchDown();
                         }
                     }
@@ -217,10 +230,18 @@ public class GameBoard extends DebuggableGroup {
         if (sweeper.connected.isEmpty()) {
             debug("ready");
             ready = true;
+            if (!settled) {
+                notifyListeners(EVENT_TYPE.BOARD_SETTLE);
+            }
             settled = true;
         } else {
             sweeper.trackDrops(this);
             debug("vanishing %d", sweeper.vanished.size());
+            if (sweeper.vanished.size() == (colCount - 2) * rowCount) {
+                notifyListeners(EVENT_TYPE.BOARD_VANISH);
+            } else {
+                notifyListeners(EVENT_TYPE.TILES_VANISH);
+            }
             for (TubeTile vanishTile : new HashSet<TubeTile>(sweeper.vanished)) {
                 if (vanishTile != null) {
                     debug("vanishing %s", vanishTile);
@@ -273,6 +294,7 @@ public class GameBoard extends DebuggableGroup {
             sweeper.vanished.remove(vanishedTile);
             if (sweeper.vanished.isEmpty()) {
                 debug("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size());
+                notifyListeners(EVENT_TYPE.TILES_DROP);
                 for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
                     debug("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY);
                     setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
@@ -320,6 +342,55 @@ public class GameBoard extends DebuggableGroup {
         scoreKeeper = keeper;
         if ((scoreKeeper != null) && (score > 0)) {
             scoreKeeper.addScore(score);
+        }
+    }
+
+    public void addGameEventListener(GameEventListener listener) {
+        if (!eventListeners.contains(listener)) {
+            eventListeners.add(listener);
+        }
+    }
+
+    public void removeGameEventListener(GameEventListener listener) {
+        if (eventListeners.contains(listener)) {
+            eventListeners.remove(listener);
+        }
+    }
+
+    public void removeAllGameEventListeners() {
+        eventListeners.clear();
+    }
+
+    private void notifyListeners(EVENT_TYPE type) {
+        for (GameEventListener listener : eventListeners) {
+            switch (type) {
+                case BOARD_RANDOM:
+                    listener.onRandomizeBoard(this);
+                    break;
+                case BOARD_SETTLE:
+                    listener.onSettleBoard(this);
+                    break;
+                case BOARD_VANISH:
+                    listener.onVanishBoard(this);
+                    break;
+                case TILES_DROP:
+                    listener.onDropTiles(sweeper.dropped);
+                    break;
+                case TILES_VANISH:
+                    listener.onVanishTiles(sweeper.vanished);
+                    break;
+            }
+        }
+    }
+
+    private void notifyListeners(EVENT_TYPE type, BaseTile tile) {
+        for (GameEventListener listener : eventListeners) {
+            switch (type) {
+                case TILE_SPIN:
+                    listener.onSpinTile(tile);
+                    break;
+            }
+            listener.onDropTiles(sweeper.dropped);
         }
     }
 
