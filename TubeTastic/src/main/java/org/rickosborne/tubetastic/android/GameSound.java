@@ -9,8 +9,10 @@ public class GameSound extends BaseGameEventListener {
 
     private static String PATH_BOOM = "audio/tube-boom.mp3";
     private static String PATH_SH   = "audio/tube-sh.mp3";
+    private static String PATH_FRABJOUS = "audio/tube-frabjous.mp3";
     private static float VOLUME_SH  = 0.5f;
     private static float VOLUME_BOOM = 1.0f;
+    private static float VOLUME_FRABJOUS = 1.0f;
 
     private class SoundEffect {
         protected Sound sound;
@@ -35,10 +37,12 @@ public class GameSound extends BaseGameEventListener {
 
     protected SoundEffect boom;
     protected SoundEffect sh;
+    protected SoundEffect frabjous;
 
     public GameSound() {
         boom = new SoundEffect(PATH_BOOM, VOLUME_BOOM);
         sh = new SoundEffect(PATH_SH, VOLUME_SH);
+        frabjous = new SoundEffect(PATH_FRABJOUS, VOLUME_FRABJOUS);
     }
 
     @Override
@@ -49,5 +53,10 @@ public class GameSound extends BaseGameEventListener {
     @Override
     public void onVanishTiles(Set<TubeTile> tiles) {
         boom.play();
+    }
+
+    @Override
+    public void onVanishBoard(GameBoard board) {
+        frabjous.play();
     }
 }
