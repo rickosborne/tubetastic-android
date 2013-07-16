@@ -33,6 +33,12 @@ public class GameSound extends BaseGameEventListener {
             stop();
             id = sound.play(volume);
         }
+
+        @Override
+        protected void finalize() throws Throwable {
+            sound.dispose();
+            super.finalize();
+        }
     }
 
     protected SoundEffect boom;
@@ -40,23 +46,36 @@ public class GameSound extends BaseGameEventListener {
     protected SoundEffect frabjous;
 
     public GameSound() {
+        init();
+    }
+
+    private void init() {
         boom = new SoundEffect(PATH_BOOM, VOLUME_BOOM);
         sh = new SoundEffect(PATH_SH, VOLUME_SH);
         frabjous = new SoundEffect(PATH_FRABJOUS, VOLUME_FRABJOUS);
     }
 
     @Override
-    public void onSpinTile(BaseTile tile) {
+    public boolean onSpinTile(BaseTile tile) {
         sh.play();
+        return super.onSpinTile(tile);
     }
 
     @Override
-    public void onVanishTiles(Set<TubeTile> tiles) {
+    public boolean onVanishTiles(Set<TubeTile> tiles) {
         boom.play();
+        return super.onVanishTiles(tiles);
     }
 
     @Override
-    public void onVanishBoard(GameBoard board) {
+    public boolean onVanishBoard(GameBoard board) {
         frabjous.play();
+        return super.onVanishBoard(board);
+    }
+
+    @Override
+    public boolean onWakeBoard(GameBoard board) {
+        init();
+        return super.onWakeBoard(board);
     }
 }

@@ -2,40 +2,40 @@ package org.rickosborne.tubetastic.android;
 
 import java.util.Set;
 
-public class BaseGameEventListener extends Debuggable implements GameEventListener {
+public class BaseGameEventListener implements GameEventListener {
 
-    static {
-        CLASS_NAME = "BaseGameEventListener";
-        DEBUG_MODE = false;
+    @Override
+    public boolean onSpinTile(BaseTile tile) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onSpinTile(BaseTile tile) {
-
+    public boolean onVanishTiles(Set<TubeTile> tiles) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onVanishTiles(Set<TubeTile> tiles) {
-
+    public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onDropTiles(Set<BoardSweeper.DroppedTile> tiles) {
-
+    public boolean onVanishBoard(GameBoard board) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onVanishBoard(GameBoard board) {
-
+    public boolean onRandomizeBoard(GameBoard board) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onRandomizeBoard(GameBoard board) {
-
+    public boolean onSettleBoard(GameBoard board) {
+        return INTERRUPT_NO;
     }
 
     @Override
-    public void onSettleBoard(GameBoard board) {
-
+    public boolean onWakeBoard(GameBoard board) {
+        return INTERRUPT_NO;
     }
 }

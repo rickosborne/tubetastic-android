@@ -4,10 +4,6 @@ import com.badlogic.gdx.graphics.Color;
 
 public class SourceTile extends BaseTile {
 
-    static {
-        CLASS_NAME = "SourceTile";
-        DEBUG_MODE = false;
-    }
     public static final Color COLOR_SOURCE = new Color(0.25f, 0.5f, 1.0f, 1.0f);
 
     public SourceTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {

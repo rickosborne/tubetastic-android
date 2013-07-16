@@ -4,12 +4,7 @@ import android.os.Bundle;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
-public class GfxCacheActivity extends DebuggableAndroidApplication {
-
-    static {
-        CLASS_NAME = "GfxCacheActivity";
-        DEBUG_MODE = false;
-    }
+public class GfxCacheActivity extends AndroidApplication {
 
     private GfxCacheListener listener;
 

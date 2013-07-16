@@ -4,16 +4,21 @@ import java.util.Set;
 
 public interface GameEventListener {
 
-    public void onSpinTile(BaseTile tile);
+    public static boolean INTERRUPT_NO  = false;
+    public static boolean INTERRUPT_YES = true;
 
-    public void onVanishTiles(Set<TubeTile> tiles);
+    public boolean onSpinTile(BaseTile tile);
 
-    public void onDropTiles(Set<BoardSweeper.DroppedTile> tiles);
+    public boolean onVanishTiles(Set<TubeTile> tiles);
 
-    public void onVanishBoard(GameBoard board);
+    public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles);
 
-    public void onRandomizeBoard(GameBoard board);
+    public boolean onVanishBoard(GameBoard board);
 
-    public void onSettleBoard(GameBoard board);
+    public boolean onRandomizeBoard(GameBoard board);
+
+    public boolean onSettleBoard(GameBoard board);
+
+    public boolean onWakeBoard(GameBoard board);
 
 }

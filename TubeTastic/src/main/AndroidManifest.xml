@@ -35,6 +35,7 @@
 			    <category android:name="android.intent.category.DEFAULT"/>
 		    </intent-filter>
 	    </activity>
+	    <!--
 	    <activity
 			    android:name="org.rickosborne.tubetastic.android.GfxCacheActivity"
 			    android:label="@string/app_title"
@@ -43,6 +44,7 @@
 			    <category android:name="android.intent.category.DEFAULT"/>
 		    </intent-filter>
 	    </activity>
+	    -->
     </application>
 
 </manifest>

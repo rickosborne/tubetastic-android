@@ -8,12 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import java.util.ArrayDeque;
 
-public class GfxCacheListener extends Debuggable implements ApplicationListener {
-
-    static {
-        CLASS_NAME = "GfxCacheListener";
-        DEBUG_MODE = false;
-    }
+public class GfxCacheListener implements ApplicationListener {
 
     public static int RENDER_COUNT = (16 * 3) + 2; // 16 outlets, 3 colors, 2 extra
 
@@ -36,7 +31,6 @@ public class GfxCacheListener extends Debuggable implements ApplicationListener 
         tileSize = getTileSize(TubeTasticGame.COUNT_COLS, TubeTasticGame.COUNT_ROWS, width, height);
         tileX = (width - tileSize) / 2;
         tileY = (height - tileSize) / 2;
-        debug("create tileSize:%d", tileSize);
         renderQueue = new ArrayDeque<BaseTile>(RENDER_COUNT);
         renderQueue.add(new SourceTile(0, 0, tileX, tileY, tileSize, null));
         renderQueue.add(new SinkTile(0, 0, tileX, tileY, tileSize, null));

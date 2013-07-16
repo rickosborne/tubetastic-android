@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
-public class TubeTasticGame extends Debuggable implements ApplicationListener {
+public class TubeTasticGame implements ApplicationListener {
 
     public static final int COUNT_COLS = 7;
     public static final int COUNT_ROWS = 9;
@@ -17,11 +17,6 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
     private static final float SHAKE_INTERVAL = 0.25f;
     private static final int SHAKE_JERKS = 8;
     private static final float SHAKE_RESET = -5.0f;
-
-    static {
-        CLASS_NAME = "TubeTasticGame";
-        DEBUG_MODE = true;
-    }
 
     private GameBoard board;
     private Stage stage;
@@ -45,11 +40,11 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
         configureGL();
         timeSinceShakeCheck = 0;
         didShake();
-        board.addGameEventListener(new GameSound());
     }
 
     @Override
     public void dispose() {
+        (new BoardKeeper(appContext)).saveBoard(board);
         stage.dispose();
     }
 
@@ -64,7 +59,6 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
         if (timeSinceShakeCheck > SHAKE_INTERVAL) {
             if (didShake()) {
                 if (board.isSettled() && board.isReady()) {
-                    debug("SHAKE!!!!!!!!!");
                     timeSinceShakeCheck = SHAKE_RESET;
                     board.randomizeTiles();
                     board.readyForSweep();
@@ -87,21 +81,18 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
         lastAccZ = newAccZ;
         if ((deltaX > SHAKE_DELTA) || (deltaY > SHAKE_DELTA) || (deltaZ > SHAKE_DELTA)) {
             jerkCount++;
-            debug("didShake active jerks:%d x:%.01f y:%.01f z:%.01f", jerkCount, deltaX, deltaY, deltaZ);
             if (jerkCount >= SHAKE_JERKS) {
                 jerkCount = 0;
                 return true;
             }
         } else if (jerkCount > 0) {
             jerkCount--;
-            debug("didShake inactive jerks:%d", jerkCount);
         }
         return false;
     }
 
     @Override
     public void resize(int width, int height) {
-        debug("resize w:%d h:%d", width, height);
         this.width = width;
         this.height = height;
         board.resizeToMax(width, height);
@@ -118,14 +109,8 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
     @Override
     public void resume() {
 //        Gdx.app.log(CLASS_NAME, "resume");
-        GameBoard newBoard = loadBoard();
-        if (newBoard != null) {
-            stage.clear();
-            board = newBoard;
-            stage.addActor(board);
-            board.resizeToMax(width, height);
-            board.begin();
-        }
+        loadOrCreateBoard();
+        Gdx.input.setInputProcessor(stage);
         configureGL();
     }
 
@@ -135,14 +120,15 @@ public class TubeTasticGame extends Debuggable implements ApplicationListener {
         if (newBoard != null) {
             newBoard.setScoreKeeper(new ScoreKeeper(appContext));
             newBoard.resizeToMax(width, height);
+            newBoard.addGameEventListener(new GameSound());
         }
         return newBoard;
     }
 
     private GameBoard createBoard() {
-        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height);
-        newBoard.setScoreKeeper(new ScoreKeeper(appContext));
+        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height, new ScoreKeeper(appContext));
         newBoard.randomizeTiles();
+        newBoard.addGameEventListener(new GameSound());
         return newBoard;
     }
 

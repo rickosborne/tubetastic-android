@@ -3,17 +3,13 @@ package org.rickosborne.tubetastic.android;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.Menu;
+import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 
-public class GameActivity extends DebuggableAndroidApplication {
+public class GameActivity extends AndroidApplication {
 
     public final static String ARG_RESUME = "resume";
     public final static String ARG_SCORE  = "score";
-    static {
-        CLASS_NAME = "GameActivity";
-        DEBUG_MODE = false;
-    }
 
     private TubeTasticGame game;
 
@@ -29,9 +25,9 @@ public class GameActivity extends DebuggableAndroidApplication {
         game = new TubeTasticGame();
         game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        debug("onCreate resume:%b", wantResume);
         game.setResume(wantResume);
         initialize(game, cfg);
+        FreetypeActor.flushCache();
     }
 
     @Override
@@ -39,16 +35,16 @@ public class GameActivity extends DebuggableAndroidApplication {
         super.onResume();
         game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        debug("onResume resume:%b", wantResume);
         game.setResume(wantResume);
+        FreetypeActor.flushCache();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.game, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.game, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -63,12 +59,10 @@ public class GameActivity extends DebuggableAndroidApplication {
         Intent result = new Intent();
         result.putExtra(ARG_SCORE, score);
         setResult(RESULT_OK, result);
-        debug("setScore score:%d", score);
     }
 
     private void updateScore() {
         int score = game.getScore();
-        debug("updateScore score:%d", score);
         setScore(score);
     }
 

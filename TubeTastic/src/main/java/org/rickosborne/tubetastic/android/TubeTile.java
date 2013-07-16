@@ -5,11 +5,6 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 public class TubeTile extends BaseTile {
 
-    static {
-        CLASS_NAME = "TubeTile";
-        DEBUG_MODE = false;
-    }
-
     private static final class OutletProbability {
         public double probability;
         public Outlets[] outlets;

@@ -1,20 +1,17 @@
 package org.rickosborne.tubetastic.android;
 
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BaseTile extends DebuggableActor {
-
-    static {
-        CLASS_NAME = "BaseTile";
-        DEBUG_MODE = false;
-    }
+public class BaseTile extends Actor {
 
     private static final class OutletOffset {
         public int col = 0;
@@ -128,12 +125,11 @@ public class BaseTile extends DebuggableActor {
             int originalDegrees = originalMap.get(degrees, -1);
             if (originalDegrees > -1) {
                 ret = this.outlets.hasOutlet(originalDegrees);
-                debug("hasOutletTo(orig:%d + rot:%d = %d) = %b", originalDegrees, outletRotation, degrees, ret);
             } else {
-                error("hasOutletTo(orig:? + rot:%d = %d) missing original degrees", outletRotation, degrees);
+                Log.e("baseTile", String.format("hasOutletTo(orig:? + rot:%d = %d) missing original degrees", outletRotation, degrees));
             }
         } else {
-            error("hasOutletTo(orig:? + rot:%d = %d) missing reverse", outletRotation, degrees);
+            Log.e("baseTile", String.format("hasOutletTo(orig:? + rot:%d = %d) missing reverse", outletRotation, degrees));
         }
         return ret;
     }
@@ -176,11 +172,16 @@ public class BaseTile extends DebuggableActor {
         return (this.power == Power.NONE);
     }
 
-    protected void resize(float x, float y, float size) {
+    protected void resize(float size) {
         midpoint = MathUtils.floor(size * 0.5f);
-        setBounds((int) x, (int) y, midpoint * 2, midpoint * 2);
         setOrigin(midpoint, midpoint);
+        setSize(midpoint * 2, midpoint * 2);
         padding = MathUtils.floor(size * SIZE_PADDING);
+    }
+
+    protected void resize(float x, float y, float size) {
+        resize(size);
+        setPosition((int) x, (int) y);
     }
 
     public int getBits() { return outlets.getBits(); }

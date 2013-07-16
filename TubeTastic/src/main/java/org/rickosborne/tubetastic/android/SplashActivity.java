@@ -1,41 +1,88 @@
 package org.rickosborne.tubetastic.android;
 
 import android.content.Intent;
-import android.os.Bundle;
-import android.app.Activity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
-public class SplashActivity extends Activity {
+import java.util.Set;
 
+public class SplashActivity extends GdxActivity {
+
+    protected static String FONT_TITLE = "Satisfy-Regular";
+    protected static String TEXT_TITLE1 = "Tube";
+    protected static String TEXT_TITLE2 = "Tastic";
+    protected static String TEXT_TITLE3 = "!";
+    protected static Color COLOR_TITLE1 = SourceTile.COLOR_POWER_SOURCED;
+    protected static Color COLOR_TITLE2 = SinkTile.COLOR_POWER_SUNK;
+    protected static Color COLOR_TITLE3 = BaseTile.COLOR_ARC;
+    protected static String UNIQUE_TITLE = FreetypeActor.uniqueCharacters(TEXT_TITLE1 + TEXT_TITLE2 + TEXT_TITLE3);
+    protected static String FONT_SCOREINST = "KiteOne-Regular";
+    protected static String TEXT_SCORE = "High Score: %d";
+    protected static String DIGITS_SCORE = "0123456789";
+    protected static Color COLOR_SCORE = new Color(BaseTile.COLOR_ARC.r, BaseTile.COLOR_ARC.g, BaseTile.COLOR_ARC.b, BaseTile.COLOR_ARC.a * 0.4f);
+    protected static String TEXT_INST1 = "Tap the squares to complete the";
+    protected static String TEXT_INST2 = "connection and start a new game.";
+    protected static String UNIQUE_SCOREINST = FreetypeActor.uniqueCharacters(TEXT_SCORE + DIGITS_SCORE + TEXT_INST1 + TEXT_INST2);
+    protected static Color COLOR_INST = BaseTile.COLOR_ARC;
     public final static int REQUEST_GAME = 1;
+
+    protected FreetypeActor titleActor1 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE1, TEXT_TITLE1);
+    protected FreetypeActor titleActor2 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE2, TEXT_TITLE2);
+    protected FreetypeActor titleActor3 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE3, TEXT_TITLE3);
+    protected FreetypeActor scoreActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false);
+    protected FreetypeActor instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
+    protected FreetypeActor instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
+    protected GameBoard gameBoard;
     private int score;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.splash_activity);
+    public void create() {
+        super.create();
+        stage.addActor(titleActor1);
+        stage.addActor(titleActor2);
+        stage.addActor(titleActor3);
+        stage.addActor(scoreActor);
+        stage.addActor(instActor1);
+        stage.addActor(instActor2);
         score = 0;
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
         updateScore();
-        toggleResumeButton();
+        scoreActor.setColor(COLOR_SCORE);
+        FreetypeActor.flushCache();
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.splash, menu);
-        return true;
+    public void resize(int width, int height) {
+        if ((this.width == width) && (this.height == height)) {
+            return;
+        }
+        super.resize(width, height);
+        FreetypeActor.flushCache();
+        float titleY = 5 * height / 6;
+        int titleHeight = height / 9;
+        titleActor1.setSize(width, titleHeight);
+        titleActor1.setFontSize(titleHeight);
+        titleActor2.setSize(width, titleHeight);
+        titleActor2.setFontSize(titleHeight);
+        titleActor3.setSize(width, titleHeight);
+        titleActor3.setFontSize(titleHeight);
+        FreetypeActor.TextBounds bounds1 = titleActor1.getBounds();
+        FreetypeActor.TextBounds bounds2 = titleActor2.getBounds();
+        FreetypeActor.TextBounds bounds3 = titleActor3.getBounds();
+        float titleWidth = bounds1.width + bounds2.width + bounds3.width;
+        float leftX = (width - titleWidth) / 2;
+        titleActor1.setBounds(leftX, titleY, bounds1.width, titleHeight);
+        titleActor2.setBounds(leftX + bounds1.width, titleY, bounds2.width, titleHeight);
+        titleActor3.setBounds(leftX + bounds1.width + bounds2.width, titleY, bounds3.width, titleHeight);
+        int scoreHeight = height / 20;
+        scoreActor.setFontSize(scoreHeight);
+        scoreActor.setBounds(0, height / 12, width, scoreHeight);
+        int instHeight = height / 28;
+        instActor1.setFontSize(instHeight);
+        instActor1.setBounds(0, height / 4, width, instHeight * 2);
+        instActor2.setFontSize(instHeight);
+        instActor2.setBounds(0, height / 4 - instHeight * 1.3f, width, instHeight * 2);
+        resetBoard();
     }
 
     @Override
@@ -48,41 +95,15 @@ public class SplashActivity extends Activity {
                     int newScore = data.getIntExtra(GameActivity.ARG_SCORE, 0);
                     if (newScore > score) {
                         score = newScore;
-                        setScore();
                     }
+                    setScore();
+                    resetBoard();
                 }
                 break;
             default:
                 Log.e("SplashActivity", String.format("onActivityResult unknown request:%d", requestCode));
         }
-    }
-
-    public void onNewGame (View sender) {
-        Intent i = new Intent(this, GameActivity.class);
-        i.putExtra(GameActivity.ARG_RESUME, false);
-        startActivityForResult(i, REQUEST_GAME);
-    }
-
-    public void onResumeGame (View sender) {
-        Intent i = new Intent(this, GameActivity.class);
-        i.putExtra(GameActivity.ARG_RESUME, true);
-        startActivityForResult(i, REQUEST_GAME);
-    }
-
-    public void onGfxCache (View sender) {
-        Intent i = new Intent(this, GfxCacheActivity.class);
-        startActivity(i);
-    }
-
-    private void setScore() {
-        FontableTextView scoreView = (FontableTextView) findViewById(R.id.splash_score);
-        String scoreTemplate = getString(R.string.high_score);
-        if ((score > 0) && (scoreView != null) && (scoreTemplate != null)) {
-            scoreView.setText(String.format(scoreTemplate, score));
-            scoreView.setVisibility(View.VISIBLE);
-        } else if (scoreView != null) {
-            scoreView.setVisibility(View.INVISIBLE);
-        }
+        FreetypeActor.flushCache();
     }
 
     private void updateScore() {
@@ -93,12 +114,58 @@ public class SplashActivity extends Activity {
         setScore();
     }
 
-    private void toggleResumeButton() {
-        BoardKeeper boardKeeper = new BoardKeeper(getApplicationContext());
-        Button resumeButton = (Button) findViewById(R.id.splash_resumegame);
-        if (resumeButton != null) {
-            resumeButton.setEnabled(boardKeeper.couldResumeGame());
+    private void setScore() {
+        if (score > 0) {
+            scoreActor.setText(String.format(TEXT_SCORE, score));
+        } else {
+            scoreActor.setText(null);
         }
     }
-    
+
+    private void clearBoard() {
+        if (gameBoard != null) {
+            gameBoard.removeAllGameEventListeners();
+            gameBoard.remove();
+            gameBoard = null;
+        }
+    }
+
+    private void resetBoard() {
+        clearBoard();
+        int boardHeight = height / 3;
+        gameBoard = BoardKeeper.loadBoard(width, boardHeight, new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
+        gameBoard.setY(gameBoard.getY() + height / 3);
+        stage.addActor(gameBoard);
+        final SplashActivity self = this;
+        final GameBoard board = this.gameBoard;
+        gameBoard.addGameEventListener(new GameSound() {
+            @Override
+            public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles) {
+                clearBoard();
+                Intent i = new Intent(self, GameActivity.class);
+                i.putExtra(GameActivity.ARG_RESUME, true);
+                startActivityForResult(i, SplashActivity.REQUEST_GAME);
+                return INTERRUPT_YES;
+            }
+
+            @Override
+            public boolean onVanishBoard(GameBoard board) {
+                return super.onVanishTiles(null);
+            }
+        });
+        gameBoard.begin();
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+        resetBoard();
+    }
+
+    @Override
+    public void pause() {
+        super.pause();
+        clearBoard();
+    }
+
 }

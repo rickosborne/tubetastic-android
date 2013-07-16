@@ -2,12 +2,7 @@ package org.rickosborne.tubetastic.android;
 
 import android.util.SparseBooleanArray;
 
-public class Outlets extends Debuggable {
-
-    static {
-        CLASS_NAME = "Outlets";
-        DEBUG_MODE = false;
-    }
+public class Outlets {
 
     public static final int BIT_NORTH = 8;
     public static final int BIT_EAST  = 4;

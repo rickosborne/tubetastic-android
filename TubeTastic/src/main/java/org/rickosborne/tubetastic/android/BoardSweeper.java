@@ -5,12 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-public class BoardSweeper extends Debuggable {
-
-    static {
-        CLASS_NAME = "BoardSweeper";
-        DEBUG_MODE = false;
-    }
+public class BoardSweeper {
 
     public static class DroppedTile {
         public TubeTile tile;
@@ -99,7 +94,6 @@ public class BoardSweeper extends Debuggable {
             sourced.add(tile);
             neither.remove(tile);
             if (tile instanceof SinkTile) {
-                debug("connected row:%d col:%d", tile.rowNum, tile.colNum);
                 connected.add(tile);
             } else if ((tile instanceof TubeTile) && !tile.isSourced()) {
                 powered.add(new TileChangePower(tile, BaseTile.Power.SOURCED));
@@ -183,7 +177,6 @@ public class BoardSweeper extends Debuggable {
                     }
                 }
             }
-            debug("trackDrops col:%d fillrows:%d", colNum, destRowNum);
             for (int rowNum = destRowNum - 1; rowNum >= 0; rowNum--) {
 //                    toDropCount++;
 //                    TubeTile tile = new TubeTile(-2, -2, colX, yForRowNum(rowNum - destRowNum), tileSize, this);
@@ -191,7 +184,6 @@ public class BoardSweeper extends Debuggable {
 //                    addActor(tile);
             }
         }
-        debug("trackDrops drop:%d add:%d", dropped.size(), added.size());
     }
 
     public void reset() {

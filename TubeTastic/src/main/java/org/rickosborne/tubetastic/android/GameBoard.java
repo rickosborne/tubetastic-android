@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import android.util.Log;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -7,12 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GameBoard extends DebuggableGroup {
-
-    static {
-        CLASS_NAME = "GameBoard";
-        DEBUG_MODE = false;
-    }
+public class GameBoard extends Group {
 
     public static final float DELAY_SWEEP = 0.125f;
 
@@ -49,17 +45,21 @@ public class GameBoard extends DebuggableGroup {
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
-        debug("rows:%d cols:%d w:%d h:%d", rowCount, colCount, maxWidth, maxHeight);
         init(colCount, rowCount, maxWidth, maxHeight);
+    }
+
+    public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight, ScoreKeeper scoreKeeper) {
+        this(colCount, rowCount, maxWidth, maxHeight);
+        this.scoreKeeper = scoreKeeper;
     }
 
     private void init(int colCount, int rowCount, int maxWidth, int maxHeight) {
         this.rowCount = rowCount;
         this.colCount = colCount;
+        FreetypeActor.flushCache();
         board = new BaseTile[rowCount][colCount];
         scoreBoard = new ScoreActor();
         resizeToMax(maxWidth, maxHeight);
-        addActor(scoreBoard);
         settled = false;
         score = 0;
         setTransform(false);
@@ -67,7 +67,6 @@ public class GameBoard extends DebuggableGroup {
     }
 
     public void randomizeTiles() {
-        debug("randomizing tiles");
         ready = false;
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
@@ -101,7 +100,6 @@ public class GameBoard extends DebuggableGroup {
                 try {
                     if (!event.isHandled() && self.isReady() && self.isSettled()) {
                         Actor target = event.getTarget();
-                        debug("touchDown x:%.0f y:%.0f target:%s", x, y, target == null ? "null" : target);
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
                             self.notifyListeners(EVENT_TYPE.TILE_SPIN, tile);
@@ -110,7 +108,7 @@ public class GameBoard extends DebuggableGroup {
                     }
                 }
                 catch (Exception e) {
-                    error("touch exception: %s", e.toString());
+                    Log.e("GameBoard", String.format("touch exception: %s", e.toString()));
                 }
                 return true;
             }
@@ -124,7 +122,11 @@ public class GameBoard extends DebuggableGroup {
         if ((getWidth() == maxWidth) && (getHeight() == maxHeight)) {
             return;
         }
-        scoreHeight = maxHeight * SCORE_HEIGHT;
+        if (scoreKeeper == null) {
+            scoreHeight = 0;
+        } else {
+            scoreHeight = maxHeight * SCORE_HEIGHT;
+        }
         float availableHeight = maxHeight - scoreHeight;
         tileSize = Math.min(maxWidth / colCount, availableHeight / rowCount);
         float w = Math.round(colCount * tileSize);
@@ -133,7 +135,19 @@ public class GameBoard extends DebuggableGroup {
         float x = (maxWidth - w) / 2f;
         float y =  (maxHeight - h) / 2f;
         setPosition(x, y);
-        scoreBoard.resize(0, 0, w, scoreHeight);
+        Log.d("GameBoard", String.format("resizeToMax mw:%d mh:%d ah:%.0f sz:%.0f w:%.0f h:%.0f x:%.0f y:%.0f", maxWidth, maxHeight, availableHeight, tileSize, w, h, x, y));
+        if (scoreKeeper != null) {
+            scoreBoard.resize(0, 0, w, scoreHeight);
+        }
+        for (int colNum = 0; colNum < colCount; colNum++) {
+            float colX = xForColNum(colNum);
+            for (int rowNum = 0; rowNum < rowCount; rowNum++) {
+                BaseTile tile = getTile(colNum, rowNum);
+                if (tile != null) {
+                    tile.resize(colX, yForRowNum(rowNum), tileSize);
+                }
+            }
+        }
     }
 
     public float xForColNum(int colNum) {
@@ -206,9 +220,7 @@ public class GameBoard extends DebuggableGroup {
     public void addScore(int score) { setScore(this.score + score); }
 
     private void powerSweep() {
-        debug("powerSweep begin");
         if (!awaitingSweep) {
-            debug("powerSweep not awaitingSweep");
             return;
         }
         awaitingSweep = false;
@@ -223,12 +235,10 @@ public class GameBoard extends DebuggableGroup {
             if ((tilePower == null) || (tilePower.tile == null)) {
                 continue;
             }
-            debug("%s power %s -> %s", tilePower.tile.toString(), tilePower.tile.power, tilePower.power);
             tilePower.tile.setPower(tilePower.power);
         }
         // gather any connected tiles
         if (sweeper.connected.isEmpty()) {
-            debug("ready");
             ready = true;
             if (!settled) {
                 notifyListeners(EVENT_TYPE.BOARD_SETTLE);
@@ -236,7 +246,6 @@ public class GameBoard extends DebuggableGroup {
             settled = true;
         } else {
             sweeper.trackDrops(this);
-            debug("vanishing %d", sweeper.vanished.size());
             if (sweeper.vanished.size() == (colCount - 2) * rowCount) {
                 notifyListeners(EVENT_TYPE.BOARD_VANISH);
             } else {
@@ -244,20 +253,16 @@ public class GameBoard extends DebuggableGroup {
             }
             for (TubeTile vanishTile : new HashSet<TubeTile>(sweeper.vanished)) {
                 if (vanishTile != null) {
-                    debug("vanishing %s", vanishTile);
                     vanishTile.vanish();
                 }
             }
             if (settled) {
-                debug("score %d + %d", score, sweeper.vanished.size());
                 score += sweeper.vanished.size();
                 scoreBoard.setScore(score);
             } else {
-                debug("not settled");
                 readyForSweep();
             }
         }
-        debug("powerSweep done");
     }
 
     public BaseTile tileAt(int colNum, int rowNum) {
@@ -273,16 +278,13 @@ public class GameBoard extends DebuggableGroup {
 
     public void tileDropComplete(TubeTile tile, int destinationColNum, int destinationRowNum) {
         if (sweeper.fell.contains(tile)) {
-            debug("drop fell:%s remain:%d", tile.toString(), sweeper.fell.size());
             setTile(destinationColNum, destinationRowNum, tile);
             sweeper.fell.remove(tile);
             if (sweeper.fell.isEmpty()) {
-                debug("drop complete");
                 readyForSweep();
-                debug("memory %d %d", Gdx.app.getNativeHeap(), Gdx.app.getJavaHeap());
             }
         } else {
-            error("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size());
+            Log.e("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size()));
         }
     }
 
@@ -293,10 +295,10 @@ public class GameBoard extends DebuggableGroup {
             removeActor(vanishedTile);
             sweeper.vanished.remove(vanishedTile);
             if (sweeper.vanished.isEmpty()) {
-                debug("fall begin drop:%d add:%d", sweeper.dropped.size(), sweeper.added.size());
-                notifyListeners(EVENT_TYPE.TILES_DROP);
+                if (notifyListeners(EVENT_TYPE.TILES_DROP)) {
+                    return;
+                }
                 for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
-                    debug("dropping %s to c:%d r:%d x:%.0f y:%.0f", droppedTile.tile, droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY);
                     setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
                     sweeper.fell.add(droppedTile.tile);
                 }
@@ -312,18 +314,16 @@ public class GameBoard extends DebuggableGroup {
                 }
             }
         } else {
-            error("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size());
+            Log.e("GameBoard", String.format("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
         }
     }
 
     public void interruptSweep() {
-        debug("interruptSweep %b -> false, actions:%d", awaitingSweep, getActions().size);
         awaitingSweep = false;
         clearActions();
     }
 
     public void readyForSweep() {
-        debug("readyForSweep %b -> true, actions:%d", awaitingSweep, getActions().size);
         final GameBoard self = this;
         awaitingSweep = true;
         clearActions();
@@ -340,8 +340,13 @@ public class GameBoard extends DebuggableGroup {
 
     public void setScoreKeeper(ScoreKeeper keeper) {
         scoreKeeper = keeper;
-        if ((scoreKeeper != null) && (score > 0)) {
-            scoreKeeper.addScore(score);
+        if (scoreKeeper == null) {
+            removeActor(scoreBoard);
+        } else {
+            addActor(scoreBoard);
+            if (score > 0) {
+                scoreKeeper.addScore(score);
+            }
         }
     }
 
@@ -361,37 +366,40 @@ public class GameBoard extends DebuggableGroup {
         eventListeners.clear();
     }
 
-    private void notifyListeners(EVENT_TYPE type) {
+    private boolean notifyListeners(EVENT_TYPE type) {
+        boolean interrupt = false;
         for (GameEventListener listener : eventListeners) {
             switch (type) {
                 case BOARD_RANDOM:
-                    listener.onRandomizeBoard(this);
+                    interrupt = interrupt || listener.onRandomizeBoard(this);
                     break;
                 case BOARD_SETTLE:
-                    listener.onSettleBoard(this);
+                    interrupt = interrupt || listener.onSettleBoard(this);
                     break;
                 case BOARD_VANISH:
-                    listener.onVanishBoard(this);
+                    interrupt = interrupt || listener.onVanishBoard(this);
                     break;
                 case TILES_DROP:
-                    listener.onDropTiles(sweeper.dropped);
+                    interrupt = interrupt || listener.onDropTiles(sweeper.dropped);
                     break;
                 case TILES_VANISH:
-                    listener.onVanishTiles(sweeper.vanished);
+                    interrupt = interrupt || listener.onVanishTiles(sweeper.vanished);
                     break;
             }
         }
+        return interrupt;
     }
 
-    private void notifyListeners(EVENT_TYPE type, BaseTile tile) {
+    private boolean notifyListeners(EVENT_TYPE type, BaseTile tile) {
+        boolean interrupt = false;
         for (GameEventListener listener : eventListeners) {
             switch (type) {
                 case TILE_SPIN:
-                    listener.onSpinTile(tile);
+                    interrupt = interrupt || listener.onSpinTile(tile);
                     break;
             }
-            listener.onDropTiles(sweeper.dropped);
         }
+        return interrupt;
     }
 
 }
