@@ -138,6 +138,7 @@ public class SplashActivity extends GdxActivity {
         }
         int boardHeight = height / 3;
         gameBoard = BoardKeeper.loadBoard(width, boardHeight, new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
+        gameBoard.setRenderControls(this);
         gameBoard.setY(gameBoard.getY() + height / 3);
         stage.addActor(gameBoard);
         final SplashActivity self = this;

@@ -1,35 +1,20 @@
 package org.rickosborne.tubetastic.android;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
-import com.badlogic.gdx.graphics.GL10;
-import com.badlogic.gdx.graphics.GL11;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 
-public class GameActivity extends GdxActivity {
+public class GameActivity extends GdxActivity implements ShakeListener.ShakeHandler {
 
     public final static String ARG_RESUME = "resume";
     public final static String ARG_SCORE  = "score";
     public static final int COUNT_COLS = 7;
     public static final int COUNT_ROWS = 9;
-    protected static final float SHAKE_DELTA = 2f;
-    protected static final float SHAKE_INTERVAL = 0.25f;
-    protected static final int SHAKE_JERKS = 8;
-    protected static final float SHAKE_RESET = -5.0f;
 
     protected GameBoard board;
     protected boolean resume = true;
-    protected float timeSinceShakeCheck;
-    protected float lastAccX = 0;
-    protected float lastAccY = 0;
-    protected float lastAccZ = 0;
-    protected int jerkCount = 0;
+    protected ShakeListener shakeListener = new ShakeListener(this);
 
     @Override
     protected AndroidApplicationConfiguration getConfig() {
@@ -77,8 +62,6 @@ public class GameActivity extends GdxActivity {
     public void create() {
         super.create();
         loadOrCreateBoard();
-        timeSinceShakeCheck = 0;
-        didShake();
     }
 
     @Override
@@ -90,40 +73,7 @@ public class GameActivity extends GdxActivity {
     @Override
     public void render() {
         super.render();
-        timeSinceShakeCheck += delta;
-        if (timeSinceShakeCheck > SHAKE_INTERVAL) {
-            if (didShake()) {
-                if (board.isSettled() && board.isReady()) {
-                    timeSinceShakeCheck = SHAKE_RESET;
-                    board.randomizeTiles();
-                    board.readyForSweep();
-                }
-            } else if(timeSinceShakeCheck > 0) {
-                timeSinceShakeCheck = 0;
-            }
-        }
-    }
-
-    private boolean didShake() {
-        float newAccX = Gdx.input.getAccelerometerX();
-        float newAccY = Gdx.input.getAccelerometerY();
-        float newAccZ = Gdx.input.getAccelerometerZ();
-        float deltaX = Math.abs(newAccX - lastAccX);
-        float deltaY = Math.abs(newAccY - lastAccY);
-        float deltaZ = Math.abs(newAccZ - lastAccZ);
-        lastAccX = newAccX;
-        lastAccY = newAccY;
-        lastAccZ = newAccZ;
-        if ((deltaX > SHAKE_DELTA) || (deltaY > SHAKE_DELTA) || (deltaZ > SHAKE_DELTA)) {
-            jerkCount++;
-            if (jerkCount >= SHAKE_JERKS) {
-                jerkCount = 0;
-                return true;
-            }
-        } else if (jerkCount > 0) {
-            jerkCount--;
-        }
-        return false;
+        shakeListener.update(delta);
     }
 
     @Override
@@ -153,6 +103,7 @@ public class GameActivity extends GdxActivity {
             newBoard.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
             newBoard.resizeToMax(width, height);
             newBoard.addGameEventListener(new GameSound());
+            newBoard.setRenderControls(this);
         }
         return newBoard;
     }
@@ -165,6 +116,7 @@ public class GameActivity extends GdxActivity {
         GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height, new ScoreKeeper(getApplicationContext()));
         newBoard.randomizeTiles();
         newBoard.addGameEventListener(new GameSound());
+        newBoard.setRenderControls(this);
         return newBoard;
     }
 
@@ -183,4 +135,11 @@ public class GameActivity extends GdxActivity {
     public void setResume(Boolean resume) { this.resume = resume; }
     public int getScore() { return board.getScore(); }
 
+    @Override
+    public void onShake() {
+        if (board.isSettled() && board.isReady()) {
+            board.randomizeTiles();
+            board.readyForSweep();
+        }
+    }
 }

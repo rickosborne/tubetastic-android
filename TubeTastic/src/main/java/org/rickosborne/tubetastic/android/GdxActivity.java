@@ -1,6 +1,7 @@
 package org.rickosborne.tubetastic.android;
 
 import android.os.Bundle;
+import android.util.Log;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -11,13 +12,15 @@ import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
-public class GdxActivity extends AndroidApplication implements ApplicationListener {
+public class GdxActivity extends AndroidApplication implements ApplicationListener, RenderControls {
 
     protected int width = 0;
     protected int height = 0;
     protected Stage stage = null;
     protected Color clearColor = new Color(0, 0, 0, 1);
     protected float delta;
+    protected boolean continuousRendering = true;
+    protected boolean deltaNeedsReset = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +52,10 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         Gdx.gl.glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         delta = Gdx.graphics.getDeltaTime();
+        if (deltaNeedsReset) {
+            delta = 0;
+            deltaNeedsReset = false;
+        }
         stage.act(delta);
         stage.draw();
     }
@@ -93,6 +100,37 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         cfg.useCompass = false;
         cfg.useWakelock = false;
         return cfg;
+    }
+
+    @Override
+    public void startRendering() {
+        if (continuousRendering) {
+            return;
+        }
+        Log.d("GdxActivity", "startRendering");
+        continuousRendering = true;
+        deltaNeedsReset = true;
+    }
+
+    @Override
+    public void stopRendering() {
+        if (!continuousRendering) {
+            return;
+        }
+        Log.d("GdxActivity", "stopRendering");
+        continuousRendering = false;
+        Gdx.graphics.requestRendering();
+    }
+
+    @Override
+    public boolean isContinuousRendering() {
+        return continuousRendering;
+    }
+
+    @Override
+    public void requestRender() {
+        Log.d("GdxActivity", "requestRender");
+        Gdx.graphics.requestRendering();
     }
 
 }

@@ -6,9 +6,8 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import java.util.HashSet;
-import java.util.Set;
 
-public class GameBoard extends Group {
+public class GameBoard extends Group implements RenderController {
 
     public static final float DELAY_SWEEP = 0.125f;
 
@@ -42,6 +41,7 @@ public class GameBoard extends Group {
     private ScoreKeeper scoreKeeper;
     protected final TileRenderer renderer = new TileRenderer();
     protected HashSet<GameEventListener> eventListeners = new HashSet<GameEventListener>();
+    protected RenderControls renderControls;
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
@@ -99,11 +99,12 @@ public class GameBoard extends Group {
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
                 try {
                     if (!event.isHandled() && self.isReady() && self.isSettled()) {
-                        Actor target = event.getTarget();
                         BaseTile tile = self.tileAt(x, y);
                         if ((tile != null) && (tile instanceof TubeTile)) {
-                            self.notifyListeners(EVENT_TYPE.TILE_SPIN, tile);
-                            ((TubeTile) tile).onTouchDown();
+                            self.startRendering();
+                            if (!self.notifyListeners(EVENT_TYPE.TILE_SPIN, tile)) {
+                                ((TubeTile) tile).onTouchDown();
+                            }
                         }
                     }
                 }
@@ -148,6 +149,7 @@ public class GameBoard extends Group {
                 }
             }
         }
+        requestRender();
     }
 
     public float xForColNum(int colNum) {
@@ -237,6 +239,9 @@ public class GameBoard extends Group {
             }
             tilePower.tile.setPower(tilePower.power);
         }
+        if (sweeper.powered.size() > 0) {
+            requestRender();
+        }
         // gather any connected tiles
         if (sweeper.connected.isEmpty()) {
             ready = true;
@@ -244,6 +249,7 @@ public class GameBoard extends Group {
                 notifyListeners(EVENT_TYPE.BOARD_SETTLE);
             }
             settled = true;
+            stopRendering();
         } else {
             sweeper.trackDrops(this);
             if (sweeper.vanished.size() == (colCount - 2) * rowCount) {
@@ -400,6 +406,28 @@ public class GameBoard extends Group {
             }
         }
         return interrupt;
+    }
+
+    public void setRenderControls(RenderControls renderControls) {
+        this.renderControls = renderControls;
+    }
+
+    private void startRendering() {
+        if (renderControls != null) {
+            renderControls.startRendering();
+        }
+    }
+
+    private void stopRendering() {
+        if (renderControls != null) {
+            renderControls.stopRendering();
+        }
+    }
+
+    private void requestRender() {
+        if (renderControls != null) {
+            renderControls.requestRender();
+        }
     }
 
 }
