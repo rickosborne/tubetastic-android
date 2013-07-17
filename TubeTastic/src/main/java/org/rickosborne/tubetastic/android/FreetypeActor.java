@@ -197,7 +197,7 @@ public class FreetypeActor extends Actor {
 
     @Override
     public void draw(SpriteBatch batch, float parentAlpha) {
-        if ((text == null) || (text.length() == 0)) {
+        if ((text == null) || (text.length() == 0) || (fontSize == 0)) {
             return;
         }
         BitmapFont font = getFont();

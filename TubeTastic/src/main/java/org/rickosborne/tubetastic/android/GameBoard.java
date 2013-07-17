@@ -7,7 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import java.util.HashSet;
 
-public class GameBoard extends Group implements RenderController {
+public class GameBoard extends Group implements RenderController, TileLoaderActor.TileLoaderWatcher {
 
     public static final float DELAY_SWEEP = 0.125f;
 
@@ -42,6 +42,9 @@ public class GameBoard extends Group implements RenderController {
     protected final TileRenderer renderer = new TileRenderer();
     protected HashSet<GameEventListener> eventListeners = new HashSet<GameEventListener>();
     protected RenderControls renderControls;
+    protected TileLoaderActor tileLoader;
+    protected boolean isLoading = false;
+    protected int[] tileBits;
 
     public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
         super();
@@ -58,12 +61,36 @@ public class GameBoard extends Group implements RenderController {
         this.colCount = colCount;
         FreetypeActor.flushCache();
         board = new BaseTile[rowCount][colCount];
-        scoreBoard = new ScoreActor();
         resizeToMax(maxWidth, maxHeight);
         settled = false;
         score = 0;
         setTransform(false);
         sweeper = new BoardSweeper(rowCount * colCount);
+    }
+
+    public void loadTiles(int... bits) {
+        clear();
+        isLoading = true;
+        tileBits = bits;
+        tileLoader = new TileLoaderActor((int) tileSize, renderer, this);
+        if ((tileBits != null) && (tileBits.length > 0)) {
+            tileLoader.setBits(tileBits);
+        }
+        float loaderX = 0;
+        float loaderY = 0;
+        float loaderW = getWidth();
+        float loaderH = getHeight();
+        float loaderRatio = loaderW / loaderH;
+        if (loaderRatio > 8f) {
+            loaderX = (loaderW - (loaderH * 8f)) / 2f;
+            loaderW = loaderH * 8f;
+        }
+        else {
+            loaderY = (loaderH - (loaderW / 8f)) / 2f;
+            loaderH = loaderW / 8f;
+        }
+        tileLoader.setBounds(loaderX, loaderY, loaderW, loaderH);
+        addActor(tileLoader);
     }
 
     public void randomizeTiles() {
@@ -93,6 +120,9 @@ public class GameBoard extends Group implements RenderController {
     }
 
     public void begin() {
+        if (isLoading) {
+            return;
+        }
         final GameBoard self = this;
         addListener(new InputListener() {
             @Override
@@ -125,8 +155,12 @@ public class GameBoard extends Group implements RenderController {
         }
         if (scoreKeeper == null) {
             scoreHeight = 0;
+            scoreBoard = null;
         } else {
             scoreHeight = maxHeight * SCORE_HEIGHT;
+            if (scoreBoard == null) {
+                scoreBoard = new ScoreActor();
+            }
         }
         float availableHeight = maxHeight - scoreHeight;
         tileSize = Math.min(maxWidth / colCount, availableHeight / rowCount);
@@ -136,8 +170,8 @@ public class GameBoard extends Group implements RenderController {
         float x = (maxWidth - w) / 2f;
         float y =  (maxHeight - h) / 2f;
         setPosition(x, y);
-        Log.d("GameBoard", String.format("resizeToMax mw:%d mh:%d ah:%.0f sz:%.0f w:%.0f h:%.0f x:%.0f y:%.0f", maxWidth, maxHeight, availableHeight, tileSize, w, h, x, y));
-        if (scoreKeeper != null) {
+//        Log.d("GameBoard", String.format("resizeToMax mw:%d mh:%d ah:%.0f sh:%.0f sz:%.0f w:%.0f h:%.0f x:%.0f y:%.0f", maxWidth, maxHeight, availableHeight, scoreHeight, tileSize, w, h, x, y));
+        if (scoreBoard != null) {
             scoreBoard.resize(0, 0, w, scoreHeight);
         }
         for (int colNum = 0; colNum < colCount; colNum++) {
@@ -149,7 +183,6 @@ public class GameBoard extends Group implements RenderController {
                 }
             }
         }
-        requestRender();
     }
 
     public float xForColNum(int colNum) {
@@ -176,7 +209,7 @@ public class GameBoard extends Group implements RenderController {
     public BaseTile setTile(int colNum, int rowNum, BaseTile tile) {
         if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
             board[rowNum][colNum] = tile;
-            if (tile != null) {
+            if ((tile != null) && (!isLoading)) {
                 addActor(tile);
             }
         }
@@ -203,7 +236,9 @@ public class GameBoard extends Group implements RenderController {
     public TubeTile setTile(float x, float y) {
         TubeTile tile = (TubeTile) setTile(-2, -2, TILE_TYPE.TUBE, 0);
         tile.setPosition(x, y);
-        addActor(tile);
+        if (!isLoading) {
+            addActor(tile);
+        }
         return tile;
     }
 
@@ -264,7 +299,9 @@ public class GameBoard extends Group implements RenderController {
             }
             if (settled) {
                 score += sweeper.vanished.size();
-                scoreBoard.setScore(score);
+                if (scoreBoard != null) {
+                    scoreBoard.setScore(score);
+                }
             } else {
                 readyForSweep();
             }
@@ -296,7 +333,7 @@ public class GameBoard extends Group implements RenderController {
 
     public void tileVanishComplete(TubeTile vanishedTile) {
         if (sweeper.vanished.contains(vanishedTile)) {
-            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
+//            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
             setTile(vanishedTile.colNum, vanishedTile.rowNum, null);
             removeActor(vanishedTile);
             sweeper.vanished.remove(vanishedTile);
@@ -348,12 +385,18 @@ public class GameBoard extends Group implements RenderController {
         scoreKeeper = keeper;
         if (scoreKeeper == null) {
             removeActor(scoreBoard);
+            scoreBoard = null;
         } else {
-            addActor(scoreBoard);
+            if (!isLoading) {
+                scoreBoard = new ScoreActor();
+                addActor(scoreBoard);
+            }
             if (score > 0) {
                 scoreKeeper.addScore(score);
+                scoreBoard.setScore(score);
             }
         }
+        requestRender();
     }
 
     public void addGameEventListener(GameEventListener listener) {
@@ -428,6 +471,40 @@ public class GameBoard extends Group implements RenderController {
         if (renderControls != null) {
             renderControls.requestRender();
         }
+    }
+
+    private boolean isRendering() {
+        return (renderControls == null) || renderControls.isContinuousRendering();
+    }
+
+    private void addGameActors() {
+        if (scoreKeeper != null) {
+            if (scoreBoard == null) {
+                scoreBoard = new ScoreActor();
+            }
+            addActor(scoreBoard);
+        }
+        for (int colNum = 0; colNum < colCount; colNum++) {
+            for (int rowNum = 0; rowNum < rowCount; rowNum++) {
+                BaseTile tile = tileAt(colNum, rowNum);
+                if (tile != null) {
+                    addActor(tile);
+                }
+            }
+        }
+        requestRender();
+    }
+
+    @Override
+    public void onTileLoadComplete() {
+//        Log.d("GameBoard", "onTileLoadComplete");
+        if (tileLoader != null) {
+            tileLoader.remove();
+            tileLoader = null;
+            addGameActors();
+        }
+        isLoading = false;
+        begin();
     }
 
 }

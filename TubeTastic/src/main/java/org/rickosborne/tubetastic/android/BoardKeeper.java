@@ -3,6 +3,7 @@ package org.rickosborne.tubetastic.android;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.util.SparseIntArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -148,6 +149,35 @@ public class BoardKeeper {
             return null;
         }
         return loadBoard(maxWidth, maxHeight, data);
+    }
+
+    public static GameBoard loadFixedBoard (int maxWidth, int maxHeight, SaveGameData data) {
+        GameBoard board = loadBoard(maxWidth, maxHeight, data);
+        SparseIntArray bitCache = new SparseIntArray(47);
+        for (int rowNum = 0; rowNum < data.rowCount; rowNum++) {
+            for (int colNum = 0; colNum < data.colCount; colNum++) {
+                BaseTile tile = board.tileAt(colNum, rowNum);
+                if (tile != null) {
+                    if (tile instanceof TubeTile) {
+                        bitCache.put(tile.getBits(), 0);
+                    }
+                    else if (tile instanceof SourceTile) {
+                        bitCache.put(-1, -1);
+                    }
+                    else if (tile instanceof SinkTile) {
+                        bitCache.put(-2, -2);
+                    }
+                }
+            }
+        }
+        if (bitCache.size() > 0) {
+            int[] bits = new int[bitCache.size()];
+            for (int i = 0; i < bitCache.size(); i++) {
+                bits[i] = bitCache.keyAt(i);
+            }
+            board.loadTiles(bits);
+        }
+        return board;
     }
 
     public Boolean couldResumeGame() {

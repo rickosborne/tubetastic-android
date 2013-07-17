@@ -104,6 +104,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
             newBoard.resizeToMax(width, height);
             newBoard.addGameEventListener(new GameSound());
             newBoard.setRenderControls(this);
+            newBoard.loadTiles();
         }
         return newBoard;
     }
@@ -117,6 +118,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         newBoard.randomizeTiles();
         newBoard.addGameEventListener(new GameSound());
         newBoard.setRenderControls(this);
+        newBoard.loadTiles();
         return newBoard;
     }
 

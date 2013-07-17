@@ -1,5 +1,6 @@
 package org.rickosborne.tubetastic.android;
 
+import android.util.Log;
 import com.badlogic.gdx.graphics.Color;
 
 public class ScoreActor extends FreetypeActor {
@@ -19,11 +20,18 @@ public class ScoreActor extends FreetypeActor {
     public void resize(float x, float y, float width, float height) {
         setSize(width, height);
         setPosition(x, y);
-        setFontSize((int) (height - (2 * height * SCORE_PADDING)));
     }
 
     public void setScore(int score) {
         setText(Integer.toString(score));
     }
 
+    @Override
+    public void setHeight(float height) {
+        if (getHeight() != height) {
+            super.setHeight(height);
+            setFontSize((int) (height - (2 * height * SCORE_PADDING)));
+            Log.d("ScoreActor", String.format("setHeight h:%.0f fsz:%d", height, fontSize));
+        }
+    }
 }

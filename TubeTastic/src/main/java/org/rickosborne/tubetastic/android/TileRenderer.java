@@ -45,6 +45,10 @@ public class TileRenderer {
         cache = new SparseArray<TileCacheItem>(TILE_COUNT);
     }
 
+    public void loadTile(BaseTile tile) {
+        getItemForTile(tile);
+    }
+
     public TextureRegion getTextureRegionForTile(BaseTile tile) {
         return getItemForTile(tile).region;
     }
