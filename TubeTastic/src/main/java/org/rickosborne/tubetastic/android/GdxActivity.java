@@ -17,6 +17,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
     protected int height = 0;
     protected Stage stage = null;
     protected Color clearColor = new Color(0, 0, 0, 1);
+    protected float delta;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +48,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
     public void render() {
         Gdx.gl.glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        float delta = Gdx.graphics.getDeltaTime();
+        delta = Gdx.graphics.getDeltaTime();
         stage.act(delta);
         stage.draw();
     }
@@ -59,6 +60,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
 
     @Override
     public void resume() {
+        Gdx.input.setInputProcessor(stage);
         configureGL();
     }
 

@@ -3,7 +3,6 @@ package org.rickosborne.tubetastic.android;
 import android.content.Intent;
 import android.util.Log;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import java.util.Set;
 
@@ -115,10 +114,12 @@ public class SplashActivity extends GdxActivity {
     }
 
     private void setScore() {
-        if (score > 0) {
-            scoreActor.setText(String.format(TEXT_SCORE, score));
-        } else {
-            scoreActor.setText(null);
+        if (scoreActor != null) {
+            if (score > 0) {
+                scoreActor.setText(String.format(TEXT_SCORE, score));
+            } else {
+                scoreActor.setText(null);
+            }
         }
     }
 
@@ -132,6 +133,9 @@ public class SplashActivity extends GdxActivity {
 
     private void resetBoard() {
         clearBoard();
+        if (stage == null) {
+            return;
+        }
         int boardHeight = height / 3;
         gameBoard = BoardKeeper.loadBoard(width, boardHeight, new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
         gameBoard.setY(gameBoard.getY() + height / 3);

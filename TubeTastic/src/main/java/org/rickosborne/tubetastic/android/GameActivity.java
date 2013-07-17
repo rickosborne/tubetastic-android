@@ -1,55 +1,62 @@
 package org.rickosborne.tubetastic.android;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
+import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.GL11;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 
-public class GameActivity extends AndroidApplication {
+public class GameActivity extends GdxActivity {
 
     public final static String ARG_RESUME = "resume";
     public final static String ARG_SCORE  = "score";
+    public static final int COUNT_COLS = 7;
+    public static final int COUNT_ROWS = 9;
+    protected static final float SHAKE_DELTA = 2f;
+    protected static final float SHAKE_INTERVAL = 0.25f;
+    protected static final int SHAKE_JERKS = 8;
+    protected static final float SHAKE_RESET = -5.0f;
 
-    private TubeTasticGame game;
+    protected GameBoard board;
+    protected boolean resume = true;
+    protected float timeSinceShakeCheck;
+    protected float lastAccX = 0;
+    protected float lastAccY = 0;
+    protected float lastAccZ = 0;
+    protected int jerkCount = 0;
+
+    @Override
+    protected AndroidApplicationConfiguration getConfig() {
+        AndroidApplicationConfiguration cfg = super.getConfig();
+        cfg.useAccelerometer = true;
+        return cfg;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        AndroidApplicationConfiguration cfg = new AndroidApplicationConfiguration();
-        cfg.useGL20 = true;
-        cfg.numSamples = 2;
-        cfg.useAccelerometer = true;
-        cfg.useCompass = false;
-        cfg.useWakelock = false;
-        game = new TubeTasticGame();
-        game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        game.setResume(wantResume);
-        initialize(game, cfg);
+        setResume(wantResume);
         FreetypeActor.flushCache();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        game.setAppContext(getApplicationContext());
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
-        game.setResume(wantResume);
+        setResume(wantResume);
         FreetypeActor.flushCache();
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.game, menu);
-//        return true;
-//    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            //set result and finish()
             updateScore();
         }
         return super.onKeyDown(keyCode, event);
@@ -62,8 +69,118 @@ public class GameActivity extends AndroidApplication {
     }
 
     private void updateScore() {
-        int score = game.getScore();
+        int score = getScore();
         setScore(score);
     }
+
+    @Override
+    public void create() {
+        super.create();
+        loadOrCreateBoard();
+        timeSinceShakeCheck = 0;
+        didShake();
+    }
+
+    @Override
+    public void dispose() {
+        (new BoardKeeper(getApplicationContext())).saveBoard(board);
+        super.dispose();
+    }
+
+    @Override
+    public void render() {
+        super.render();
+        timeSinceShakeCheck += delta;
+        if (timeSinceShakeCheck > SHAKE_INTERVAL) {
+            if (didShake()) {
+                if (board.isSettled() && board.isReady()) {
+                    timeSinceShakeCheck = SHAKE_RESET;
+                    board.randomizeTiles();
+                    board.readyForSweep();
+                }
+            } else if(timeSinceShakeCheck > 0) {
+                timeSinceShakeCheck = 0;
+            }
+        }
+    }
+
+    private boolean didShake() {
+        float newAccX = Gdx.input.getAccelerometerX();
+        float newAccY = Gdx.input.getAccelerometerY();
+        float newAccZ = Gdx.input.getAccelerometerZ();
+        float deltaX = Math.abs(newAccX - lastAccX);
+        float deltaY = Math.abs(newAccY - lastAccY);
+        float deltaZ = Math.abs(newAccZ - lastAccZ);
+        lastAccX = newAccX;
+        lastAccY = newAccY;
+        lastAccZ = newAccZ;
+        if ((deltaX > SHAKE_DELTA) || (deltaY > SHAKE_DELTA) || (deltaZ > SHAKE_DELTA)) {
+            jerkCount++;
+            if (jerkCount >= SHAKE_JERKS) {
+                jerkCount = 0;
+                return true;
+            }
+        } else if (jerkCount > 0) {
+            jerkCount--;
+        }
+        return false;
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        super.resize(width, height);
+        if (board != null) {
+            board.resizeToMax(width, height);
+        }
+    }
+
+    @Override
+    public void pause() {
+        super.pause();
+        saveBoard();
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+        loadOrCreateBoard();
+    }
+
+    private GameBoard loadBoard() {
+        BoardKeeper boardKeeper = new BoardKeeper(getApplicationContext());
+        GameBoard newBoard = boardKeeper.loadBoard(width, height);
+        if (newBoard != null) {
+            newBoard.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
+            newBoard.resizeToMax(width, height);
+            newBoard.addGameEventListener(new GameSound());
+        }
+        return newBoard;
+    }
+
+    private void saveBoard() {
+        (new BoardKeeper(getApplicationContext())).saveBoard(board);
+    }
+
+    private GameBoard createBoard() {
+        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height, new ScoreKeeper(getApplicationContext()));
+        newBoard.randomizeTiles();
+        newBoard.addGameEventListener(new GameSound());
+        return newBoard;
+    }
+
+    private void loadOrCreateBoard() {
+        if (resume) {
+            board = loadBoard();
+        }
+        if (board == null) {
+            board = createBoard();
+        }
+        stage.clear();
+        stage.addActor(board);
+        board.begin();
+    }
+
+    public void setResume(Boolean resume) { this.resume = resume; }
+    public int getScore() { return board.getScore(); }
 
 }

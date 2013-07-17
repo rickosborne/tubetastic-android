@@ -28,7 +28,7 @@ public class GfxCacheListener implements ApplicationListener {
         width = Gdx.graphics.getWidth();
         height = Gdx.graphics.getHeight();
         stage = new Stage(width, height, true);
-        tileSize = getTileSize(TubeTasticGame.COUNT_COLS, TubeTasticGame.COUNT_ROWS, width, height);
+        tileSize = getTileSize(GameActivity.COUNT_COLS, GameActivity.COUNT_ROWS, width, height);
         tileX = (width - tileSize) / 2;
         tileY = (height - tileSize) / 2;
         renderQueue = new ArrayDeque<BaseTile>(RENDER_COUNT);
