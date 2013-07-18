@@ -27,5 +27,29 @@ android {
         minSdkVersion 10
         targetSdkVersion 16
     }
+
+    signingConfigs {
+        release
+    }
+
+    buildTypes {
+        release {
+            debuggable false
+            jniDebugBuild false
+            signingConfig signingConfigs.release
+        }
+    }
+
 }
+
+if (hasProperty('storeFile')) {
+    println 'Generating a signed package.'
+    android.signingConfigs.release.storeFile = file(storeFile)
+    android.signingConfigs.release.storePassword = storePassword
+    android.signingConfigs.release.keyAlias = keyAlias
+    android.signingConfigs.release.keyPassword = keyPassword
+} else {
+    android.buildTypes.release.signingConfig = null
+}
+
 
