@@ -6,4 +6,5 @@
 	<dimen name="splash_title_height">166px</dimen>
 	<dimen name="splash_credit_fontsize">24dp</dimen>
 	<dimen name="instruction_margins">48dp</dimen>
+	<dimen name="about_license_sp">14sp</dimen>
 </resources>

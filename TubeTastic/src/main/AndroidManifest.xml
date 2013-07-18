@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.rickosborne.tubetastic.android"
+    android:installLocation="auto"
     android:versionCode="1"
-    android:versionName="1.0"
-    android:installLocation="auto">
+    android:versionName="1.0" >
 
     <uses-sdk
         android:minSdkVersion="10"
         android:targetSdkVersion="17" />
 
-	<uses-feature
-			android:name="android.hardware.sensor.accelerometer"
-			android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.accelerometer"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_title"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
         <activity
             android:name="org.rickosborne.tubetastic.android.SplashActivity"
-            android:label="@string/app_title">
+            android:label="@string/app_title" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-	    <activity
-			    android:name="org.rickosborne.tubetastic.android.GameActivity"
-			    android:label="@string/app_title"
-			    android:configChanges="orientation|keyboard|keyboardHidden">
-		    <intent-filter>
-			    <category android:name="android.intent.category.DEFAULT"/>
-		    </intent-filter>
-	    </activity>
-	    <!--
+        <activity
+            android:name="org.rickosborne.tubetastic.android.GameActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden"
+            android:label="@string/app_title" >
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <!--
 	    <activity
 			    android:name="org.rickosborne.tubetastic.android.GfxCacheActivity"
 			    android:label="@string/app_title"
@@ -44,7 +44,18 @@
 			    <category android:name="android.intent.category.DEFAULT"/>
 		    </intent-filter>
 	    </activity>
-	    -->
+        -->
+        <activity
+            android:name="org.rickosborne.tubetastic.android.AboutActivity"
+            android:label="@string/title_activity_about"
+            android:parentActivityName="org.rickosborne.tubetastic.android.SplashActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.rickosborne.tubetastic.android.SplashActivity" />
+	        <intent-filter>
+		        <category android:name="android.intent.category.DEFAULT" />
+	        </intent-filter>
+        </activity>
     </application>
 
 </manifest>

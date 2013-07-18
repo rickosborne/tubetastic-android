@@ -6,16 +6,22 @@
     <string name="hello_world">Hello world!</string>
     <string name="app_title">TubeTastic!</string>
     <string name="title_activity_splash">TubeTastic!</string>
-	<string name="credit">by Rick Osborne</string>
-	<string name="space"> </string>
-	<string name="high_score">High Score: %d</string>
-	<string name="instructions">Start a new game:\nTap the square to align the tubes.</string>
-	<string name="resume_game">Resume Game</string>
-	<string name="new_game">New Game</string>
-	<string name="gfx_cache">Cache Graphics</string>
-
-	<string name="prefs_name">TubeTastic</string>
-	<string name="prefs_score_high">score:high</string>
-	<string name="prefs_board_tiles">board:tiles</string>
+    <string name="credit">by Rick Osborne</string>
+    <string name="space"></string>
+    <string name="high_score">High Score: %d</string>
+    <string name="instructions">Start a new game:\nTap the square to align the tubes.</string>
+    <string name="resume_game">Resume Game</string>
+    <string name="new_game">New Game</string>
+    <string name="gfx_cache">Cache Graphics</string>
+    <string name="prefs_name">TubeTastic</string>
+    <string name="prefs_score_high">score:high</string>
+    <string name="prefs_board_tiles">board:tiles</string>
+    <string name="title_activity_about">About</string>
+	<string name="licenses">Licenses</string>
+	<string name="license_text"><![CDATA[
+This app uses the "Kite One Regular" font, © 2012 by Eduardo Tunni (http://www.tipo.net.ar), licensed under the SIL Open Font License, Version 1.1.  See (http://scripts.sil.org/OFL) for more details.\n
+\n
+This app uses the "Satisfy Regular" font by Squid (aka Dave Cohen of Sideshow Foundry), licensed under the Apache 2.0 License.  See (http://www.apache.org/licenses/) for more details.
+	]]></string>
 
 </resources>

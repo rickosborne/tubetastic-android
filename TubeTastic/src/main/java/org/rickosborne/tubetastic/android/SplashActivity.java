@@ -3,6 +3,9 @@ package org.rickosborne.tubetastic.android;
 import android.content.Intent;
 import android.util.Log;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 
 import java.util.Set;
 
@@ -33,6 +36,13 @@ public class SplashActivity extends GdxActivity {
     protected FreetypeActor instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
     protected FreetypeActor instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
     protected GameBoard gameBoard;
+    protected InputListener onClickListener = new InputListener(){
+        @Override
+        public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+            launchAbout();
+            return super.touchDown(event, x, y, pointer, button);
+        }
+    };
     private int score;
 
     @Override
@@ -44,6 +54,12 @@ public class SplashActivity extends GdxActivity {
         stage.addActor(scoreActor);
         stage.addActor(instActor1);
         stage.addActor(instActor2);
+        titleActor1.setTouchable(Touchable.enabled);
+        titleActor2.setTouchable(Touchable.enabled);
+        titleActor3.setTouchable(Touchable.enabled);
+        titleActor1.addListener(onClickListener);
+        titleActor2.addListener(onClickListener);
+        titleActor3.addListener(onClickListener);
         score = 0;
         updateScore();
         scoreActor.setColor(COLOR_SCORE);
@@ -171,6 +187,10 @@ public class SplashActivity extends GdxActivity {
     public void pause() {
         super.pause();
         clearBoard();
+    }
+
+    protected void launchAbout() {
+        startActivity(new Intent(this, AboutActivity.class));
     }
 
 }
