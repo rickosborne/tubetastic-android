@@ -13,7 +13,7 @@ public class TileRenderer {
     public static final int BITS_SOURCED = 400;
     public static final int BITS_SUNK    = 100;
     public static final int TILE_COUNT   = (16 * 3) + 2;
-    public static final int SCALE_OVERSIZE = 4;
+    public static final int SCALE_OVERSIZE = 2;
     private static final Color COLOR_ERASE = new Color(BaseTile.COLOR_ARC.r, BaseTile.COLOR_ARC.g, BaseTile.COLOR_ARC.b, 0f);
 
     private class TileCacheItem {
@@ -119,12 +119,12 @@ public class TileRenderer {
 
     public static Pixmap renderPixmapForTile(BaseTile tile, int size) {
         int tileSize = (size * SCALE_OVERSIZE);
+        int farthest = tileSize - 1;
         int bits = tile.getBits();
-        int halfSize = tileSize / 2;
+        int halfStep = SCALE_OVERSIZE / 2;
+        int halfSize = tileSize / 2 - halfStep;
         int padding = (int) (tileSize * BaseTile.SIZE_PADDING);
         int radius = halfSize - (padding * 2);
-        int arcSize = (int) (tileSize * BaseTile.SIZE_ARCWIDTH);
-        int halfArcSize = arcSize / 2;
         Color backColor;
         switch (tile.power) {
             case SOURCED: backColor = SourceTile.COLOR_POWER_SOURCED; break;
@@ -146,7 +146,7 @@ public class TileRenderer {
             int cornerRadius = padding * 2;
             int leftX = padding;
             int rightX = tileSize - padding;
-            int topY = tileSize - padding;
+            int topY = rightX;
             int bottomY = padding;
             int outerSize = topY - bottomY;
             int innerSize = outerSize - (cornerRadius * 2);
@@ -160,6 +160,8 @@ public class TileRenderer {
             oversize.fillCircle(rightX - cornerRadius, topY - cornerRadius, cornerRadius);
         }
         Pixmap arcs = new Pixmap(tileSize, tileSize, Pixmap.Format.RGBA8888);
+        int arcSize = (int) (tileSize * BaseTile.SIZE_ARCWIDTH);
+        int halfArcSize = arcSize / 2;
         int arcLow = halfSize - halfArcSize;
         int arcHigh = halfSize + halfArcSize;
         if (bits == Outlets.BIT_WEST) {
@@ -179,13 +181,13 @@ public class TileRenderer {
                 drawArc(arcs, 0, 0, arcLow, arcHigh); // WS
             }
             if ((bits & Outlets.BIT_SOUTH) != 0 && (bits & Outlets.BIT_EAST) != 0) {
-                drawArc(arcs, tileSize, 0, arcLow, arcHigh); // SE
+                drawArc(arcs, farthest, 0, arcLow, arcHigh); // SE
             }
             if ((bits & Outlets.BIT_EAST) != 0 && (bits & Outlets.BIT_NORTH) != 0) {
-                drawArc(arcs, tileSize, tileSize, arcLow, arcHigh); // EN
+                drawArc(arcs, farthest, farthest, arcLow, arcHigh); // EN
             }
             if ((bits & Outlets.BIT_WEST) != 0 && (bits & Outlets.BIT_NORTH) != 0) {
-                drawArc(arcs, 0, tileSize, arcLow, arcHigh); // WN
+                drawArc(arcs, 0, farthest, arcLow, arcHigh); // WN
             }
             if ((bits & Outlets.BIT_WEST) != 0 && (bits & Outlets.BIT_EAST) != 0) {
                 drawHLine(arcs, 0, halfSize, tileSize, arcSize);

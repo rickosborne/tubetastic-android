@@ -61,15 +61,15 @@
 			android:text="@string/licenses"
 			android:id="@+id/about_licenses" android:layout_gravity="center"
 			android:layout_marginTop="@dimen/activity_vertical_margin"/>
-	<EditText
+	<TextView
 			android:layout_width="fill_parent"
 			android:layout_height="fill_parent"
-			android:inputType="textMultiLine|textNoSuggestions"
 			android:ems="10"
 			android:id="@+id/editText"
 			android:background="@android:color/black"
 			android:textColor="@android:color/darker_gray"
 	        android:text="@string/license_text"
-	        android:textSize="@dimen/about_license_sp" android:gravity="top" android:editable="false"
-	        android:linksClickable="true" android:autoLink="web" android:autoText="false"/>
+	        android:textSize="@dimen/about_license_sp" android:gravity="top"
+	        android:linksClickable="true" android:autoLink="web"
+	        />
 </LinearLayout>
