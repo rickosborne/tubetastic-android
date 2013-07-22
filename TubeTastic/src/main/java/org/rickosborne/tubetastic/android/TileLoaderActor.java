@@ -35,7 +35,7 @@ public class TileLoaderActor extends ProgressActor {
     private String labelText = labelTexts[labelTextNum];
 
     public TileLoaderActor(int tileSize, TileRenderer renderer, TileLoaderWatcher watcher) {
-        super(SplashActivity.FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, labelUnique, false, TileActor.COLOR_ARC);
+        super(SplashActivity.FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, labelUnique, false, GamePrefs.COLOR_ARC);
         // Log.d("TileLoaderActor", String.format("ctor tileSize:%d", tileSize));
         this.tileSize = tileSize;
         this.renderer = renderer;

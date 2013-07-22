@@ -32,6 +32,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         setResume(wantResume);
         FreetypeActor.flushCache();
         boardBounds = new Rectangle(0, 0, 0, 0);
+        clearColor = GamePrefs.COLOR_BACK;
     }
 
     @Override
@@ -84,6 +85,9 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         super.resize(width, height);
         boardBounds.width = width;
         boardBounds.height = height;
+        if (boardActor == null) {
+            loadOrCreateBoard();
+        }
         if (boardActor != null) {
             boardActor.resizeToFit(boardBounds);
         }
@@ -106,11 +110,6 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         GameBoard newBoard = boardKeeper.loadSavedBoard();
         if (newBoard != null) {
             boardActor = new BoardActor(newBoard, boardBounds);
-            boardActor.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
-            boardActor.resizeToFit(boardBounds);
-            boardActor.addGameEventListener(new GameSound());
-            boardActor.setRenderControls(this);
-            boardActor.loadTiles();
             return boardActor;
         }
         return null;
@@ -124,13 +123,13 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS);
         newBoard.randomizeTiles();
         boardActor = new BoardActor(newBoard, boardBounds);
-        boardActor.addGameEventListener(new GameSound());
-        boardActor.setRenderControls(this);
-        boardActor.loadTiles();
         return boardActor;
     }
 
     private void loadOrCreateBoard() {
+        if ((width == 0) || (height == 0)) {
+            return;
+        }
         if (resume) {
             loadBoard();
         }
@@ -138,7 +137,12 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
             createBoard();
         }
         stage.clear();
+        boardActor.setRenderControls(this);
         stage.addActor(boardActor);
+        boardActor.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
+        boardActor.resizeToFit(boardBounds);
+        boardActor.addGameEventListener(new GameSound());
+        boardActor.loadTiles();
         boardActor.begin();
     }
 

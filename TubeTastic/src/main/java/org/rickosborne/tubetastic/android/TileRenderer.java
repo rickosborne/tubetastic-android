@@ -14,7 +14,7 @@ public class TileRenderer {
     public static final int BITS_SUNK    = 100;
     public static final int TILE_COUNT   = (16 * 3) + 2;
     public static final int SCALE_OVERSIZE = 2;
-    private static final Color COLOR_ERASE = new Color(TileActor.COLOR_ARC.r, TileActor.COLOR_ARC.g, TileActor.COLOR_ARC.b, 0f);
+    private static final Color COLOR_ERASE = new Color(GamePrefs.COLOR_ARC.r, GamePrefs.COLOR_ARC.g, GamePrefs.COLOR_ARC.b, 0f);
 
     private class TileCacheItem {
         int bits;
@@ -96,7 +96,7 @@ public class TileRenderer {
 
     private static void drawArc(Pixmap target, int x, int y, int innerRadius, int outerRadius) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(TileActor.COLOR_ARC);
+        target.setColor(GamePrefs.COLOR_ARC);
         target.fillCircle(x, y, outerRadius);
         Pixmap.setBlending(Pixmap.Blending.None);
         target.setColor(COLOR_ERASE);
@@ -105,7 +105,7 @@ public class TileRenderer {
 
     private static void drawHLine(Pixmap target, int x, int y, int width, int thickness) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(TileActor.COLOR_ARC);
+        target.setColor(GamePrefs.COLOR_ARC);
         int halfThickness = (thickness / 2);
         int bottom = y - halfThickness;
         target.fillRectangle(x, bottom, width, thickness);
@@ -113,7 +113,7 @@ public class TileRenderer {
 
     private static void drawVLine(Pixmap target, int x, int y, int height, int thickness) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(TileActor.COLOR_ARC);
+        target.setColor(GamePrefs.COLOR_ARC);
         target.fillRectangle(x - (thickness / 2), y, thickness, height);
     }
 
@@ -127,9 +127,9 @@ public class TileRenderer {
         int radius = halfSize - (padding * 2);
         Color backColor;
         switch (tile.power) {
-            case SOURCED: backColor = TileActor.COLOR_POWER_SOURCED; break;
-            case SUNK: backColor = TileActor.COLOR_POWER_SUNK; break;
-            default: backColor = TileActor.COLOR_POWER_NONE; break;
+            case SOURCED: backColor = GamePrefs.COLOR_POWER_SOURCED; break;
+            case SUNK: backColor = GamePrefs.COLOR_POWER_SUNK; break;
+            default: backColor = GamePrefs.COLOR_POWER_NONE; break;
         }
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
         Pixmap.setFilter(Pixmap.Filter.BiLinear);

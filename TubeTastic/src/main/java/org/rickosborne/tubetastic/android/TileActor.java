@@ -11,12 +11,6 @@ public class TileActor extends Actor implements TileWatcher {
 
     public static final float SIZE_PADDING = 1f / 16f;
     public static final float SIZE_ARCWIDTH = 1f / 8f;
-    public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
-    public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-    public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
-    public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
-    public static final Color COLOR_SOURCE = new Color(0.25f, 0.5f, 1.0f, 1.0f);
-    public static final Color COLOR_SINK = new Color(1.0f, 0.5f, 0.25f, 1.0f);
     public static final float DURATION_VANISH = 0.500f;
     public static final float DURATION_DROP   = 0.250f;
     public static final float DURATION_APPEAR = DURATION_VANISH + DURATION_DROP;

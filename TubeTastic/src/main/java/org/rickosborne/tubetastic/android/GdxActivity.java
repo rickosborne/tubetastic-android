@@ -31,7 +31,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
     @Override
     public void create() {
         stage = new Stage(0, 0, true);
-        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//        resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.input.setInputProcessor(stage);
         configureGL();
     }

@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.rickosborne.tubetastic.android"
     android:installLocation="auto"
-    android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionCode="2"
+    android:versionName="1.1" >
 
     <uses-sdk
         android:minSdkVersion="10"
@@ -48,6 +48,18 @@
         <activity
             android:name="org.rickosborne.tubetastic.android.AboutActivity"
             android:label="@string/title_activity_about"
+            android:parentActivityName="org.rickosborne.tubetastic.android.SplashActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.rickosborne.tubetastic.android.SplashActivity" />
+
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="org.rickosborne.tubetastic.android.SettingsActivity"
+            android:label="@string/title_activity_settings"
             android:parentActivityName="org.rickosborne.tubetastic.android.SplashActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

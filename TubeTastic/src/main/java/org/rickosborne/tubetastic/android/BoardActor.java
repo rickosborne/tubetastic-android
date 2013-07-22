@@ -1,6 +1,7 @@
 package org.rickosborne.tubetastic.android;
 
 import android.util.Log;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
@@ -23,6 +24,11 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
         TILES_VANISH_START,
         TILES_VANISH_FINISH
     }
+
+    public static Color COLOR_SOURCE = GamePrefs.COLOR_POWER_SOURCED;
+    public static Color COLOR_SINK   = GamePrefs.COLOR_POWER_SUNK;
+    public static Color COLOR_ARC    = GamePrefs.COLOR_ARC;
+    public static Color COLOR_NONE   = GamePrefs.COLOR_POWER_NONE;
 
     private GameBoard gameBoard;
     private float tileSize = 0;
@@ -69,6 +75,10 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
 //        setSize(maxWidth, maxHeight);
         resizeToFit(bounds);
         setTransform(false);
+        COLOR_SOURCE = GamePrefs.COLOR_POWER_SOURCED;
+        COLOR_SINK   = GamePrefs.COLOR_POWER_SUNK;
+        COLOR_ARC    = GamePrefs.COLOR_ARC;
+        COLOR_NONE   = GamePrefs.COLOR_POWER_NONE;
     }
 
     public void loadTiles(int... bits) {

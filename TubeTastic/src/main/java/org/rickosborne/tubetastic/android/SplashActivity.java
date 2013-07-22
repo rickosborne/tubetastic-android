@@ -1,9 +1,14 @@
 package org.rickosborne.tubetastic.android;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -16,26 +21,31 @@ public class SplashActivity extends GdxActivity {
     protected static String TEXT_TITLE1 = "Tube";
     protected static String TEXT_TITLE2 = "Tastic";
     protected static String TEXT_TITLE3 = "!";
-    protected static Color COLOR_TITLE1 = TileActor.COLOR_POWER_SOURCED;
-    protected static Color COLOR_TITLE2 = TileActor.COLOR_POWER_SUNK;
-    protected static Color COLOR_TITLE3 = TileActor.COLOR_ARC;
     protected static String UNIQUE_TITLE = FreetypeActor.uniqueCharacters(TEXT_TITLE1 + TEXT_TITLE2 + TEXT_TITLE3);
     protected static String FONT_SCOREINST = "KiteOne-Regular";
     protected static String TEXT_SCORE = "High Score: %d";
     protected static String DIGITS_SCORE = "0123456789";
-    protected static Color COLOR_SCORE = new Color(TileActor.COLOR_ARC.r, TileActor.COLOR_ARC.g, TileActor.COLOR_ARC.b, TileActor.COLOR_ARC.a * 0.4f);
-    protected static String TEXT_INST1 = "Tap the squares to complete the";
-    protected static String TEXT_INST2 = "connection and start a new game.";
-    protected static String UNIQUE_SCOREINST = FreetypeActor.uniqueCharacters(TEXT_SCORE + DIGITS_SCORE + TEXT_INST1 + TEXT_INST2);
-    protected static Color COLOR_INST = TileActor.COLOR_ARC;
+    protected static String TEXT_INST1 = "Tap squares to rotate them.";
+    protected static String TEXT_INST2 = "Connect the left & right sides";
+    protected static String TEXT_INST3_NEW = "to begin a new game.";
+    protected static String TEXT_INST3_RES = "to resume your last game.";
+    protected static String TEXT_INST3;
+    protected static String TEXT_VER = "v. %s";
+    protected static String UNIQUE_SCOREINST = FreetypeActor.uniqueCharacters(TEXT_SCORE + DIGITS_SCORE + TEXT_INST1 + TEXT_INST2 + TEXT_INST3_NEW + TEXT_INST3_RES);
+    protected static String UNIQUE_VER = FreetypeActor.uniqueCharacters(TEXT_VER + DIGITS_SCORE);
+    protected static Color COLOR_INST = GamePrefs.COLOR_ARC;
+    protected static Color COLOR_VER = new Color(0.25f, 0.25f, 0.25f, 1.0f);
     public final static int REQUEST_GAME = 1;
+    public final static int REQUEST_PREFS = 2;
 
-    protected FreetypeActor titleActor1 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE1, TEXT_TITLE1);
-    protected FreetypeActor titleActor2 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE2, TEXT_TITLE2);
-    protected FreetypeActor titleActor3 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE3, TEXT_TITLE3);
-    protected FreetypeActor scoreActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false);
-    protected FreetypeActor instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
-    protected FreetypeActor instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
+    protected FreetypeActor titleActor1;
+    protected FreetypeActor titleActor2;
+    protected FreetypeActor titleActor3;
+    protected FreetypeActor scoreActor;
+    protected FreetypeActor instActor1;
+    protected FreetypeActor instActor2;
+    protected FreetypeActor instActor3;
+    protected FreetypeActor verActor;
     protected BoardActor boardActor;
     protected InputListener onClickListener = new InputListener(){
         @Override
@@ -47,32 +57,59 @@ public class SplashActivity extends GdxActivity {
     private int score;
     protected Rectangle boardBounds = new Rectangle(0, 0, 0, 0);
 
-    @Override
-    public void create() {
-        super.create();
+    protected void removeListeners(Actor actor) {
+        if (actor != null) {
+            actor.removeListener(onClickListener);
+        }
+    }
+
+    protected void init() {
+        GamePrefs.loadFromContext(getApplicationContext());
+        stage.clear();
+        if ((new BoardKeeper(getApplicationContext())).couldResumeGame()) {
+            TEXT_INST3 = TEXT_INST3_RES;
+        } else {
+            TEXT_INST3 = TEXT_INST3_NEW;
+        }
+        removeListeners(titleActor1);
+        removeListeners(titleActor2);
+        removeListeners(titleActor3);
+        titleActor1 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, GamePrefs.COLOR_POWER_SOURCED, TEXT_TITLE1);
+        titleActor2 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, GamePrefs.COLOR_POWER_SUNK, TEXT_TITLE2);
+        titleActor3 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, GamePrefs.COLOR_ARC, TEXT_TITLE3);
+        scoreActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false);
+        instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
+        instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
+        instActor3 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST3);
+        verActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.EAST, UNIQUE_VER, false, COLOR_VER, getAppVersion());
         stage.addActor(titleActor1);
         stage.addActor(titleActor2);
         stage.addActor(titleActor3);
         stage.addActor(scoreActor);
         stage.addActor(instActor1);
         stage.addActor(instActor2);
+        stage.addActor(instActor3);
+        stage.addActor(verActor);
         titleActor1.setTouchable(Touchable.enabled);
         titleActor2.setTouchable(Touchable.enabled);
         titleActor3.setTouchable(Touchable.enabled);
+        verActor.setTouchable(Touchable.enabled);
         titleActor1.addListener(onClickListener);
         titleActor2.addListener(onClickListener);
         titleActor3.addListener(onClickListener);
-        score = 0;
-        updateScore();
-        scoreActor.setColor(COLOR_SCORE);
+        verActor.addListener(onClickListener);
+        scoreActor.setColor(GamePrefs.COLOR_ARC.r, GamePrefs.COLOR_ARC.g, GamePrefs.COLOR_ARC.b, GamePrefs.COLOR_ARC.a * 0.4f);
         FreetypeActor.flushCache();
     }
 
     @Override
+    public void create() {
+        super.create();
+        init();
+    }
+
+    @Override
     public void resize(int width, int height) {
-        if ((this.width == width) && (this.height == height)) {
-            return;
-        }
         super.resize(width, height);
         FreetypeActor.flushCache();
         float titleY = 5 * height / 6;
@@ -93,12 +130,20 @@ public class SplashActivity extends GdxActivity {
         titleActor3.setBounds(leftX + bounds1.width + bounds2.width, titleY, bounds3.width, titleHeight);
         int scoreHeight = height / 20;
         scoreActor.setFontSize(scoreHeight);
-        scoreActor.setBounds(0, height / 12, width, scoreHeight);
-        int instHeight = height / 28;
+        scoreActor.setBounds(0, height / 10, width, scoreHeight);
+        int instHeight = height / 27;
+        float instY = height / 3;
+        float instLineHeight = instHeight * 1.3f;
         instActor1.setFontSize(instHeight);
-        instActor1.setBounds(0, height / 4, width, instHeight * 2);
+        instActor1.setBounds(0, instY + instLineHeight, width, instHeight * 2);
         instActor2.setFontSize(instHeight);
-        instActor2.setBounds(0, height / 4 - instHeight * 1.3f, width, instHeight * 2);
+        instActor2.setBounds(0, instY, width, instHeight * 2);
+        instActor3.setFontSize(instHeight);
+        instActor3.setBounds(0, instY - instLineHeight, width, instHeight * 2);
+        verActor.setFontSize(height / 34);
+        verActor.setBounds(0, 0, width - height / 60, height / 30);
+        score = 0;
+        updateScore();
         resetBoard();
     }
 
@@ -117,10 +162,37 @@ public class SplashActivity extends GdxActivity {
                     resetBoard();
                 }
                 break;
+            case REQUEST_PREFS:
+                init();
+                resize(width, height);
+                break;
             default:
                 Log.e("SplashActivity", String.format("onActivityResult unknown request:%d", requestCode));
         }
         FreetypeActor.flushCache();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.splash, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.action_settings:
+                launchSettings();
+                return true;
+            case R.id.action_about:
+                launchAbout();
+                return true;
+            case R.id.action_newgame:
+                launchNew();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void updateScore() {
@@ -155,8 +227,8 @@ public class SplashActivity extends GdxActivity {
             return;
         }
         int boardHeight = height / 3;
-        boardBounds.set(0, boardHeight, width, boardHeight);
-        final GameBoard gameBoard = BoardKeeper.loadFixedBoard(new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
+        boardBounds.set(0, 4 * height / 9, width, boardHeight);
+        final GameBoard gameBoard = BoardKeeper.loadFixedBoard(new BoardKeeper.SaveGameData(5, 2, "4A91146CB1", 0));
         boardActor = new BoardActor(gameBoard, boardBounds);
         boardActor.setRenderControls(this);
         stage.addActor(boardActor);
@@ -172,9 +244,7 @@ public class SplashActivity extends GdxActivity {
             @Override
             public boolean onVanishTilesFinish() {
                 clearBoard();
-                Intent i = new Intent(self, GameActivity.class);
-                i.putExtra(GameActivity.ARG_RESUME, true);
-                startActivityForResult(i, SplashActivity.REQUEST_GAME);
+                launchResume();
                 return INTERRUPT_YES;
             }
 
@@ -202,6 +272,35 @@ public class SplashActivity extends GdxActivity {
 
     protected void launchAbout() {
         startActivity(new Intent(this, AboutActivity.class));
+    }
+
+    protected void launchSettings() {
+        startActivityForResult(new Intent(this, SettingsActivity.class), REQUEST_PREFS);
+    }
+
+    protected void launchResume() {
+        Intent i = new Intent(this, GameActivity.class);
+        i.putExtra(GameActivity.ARG_RESUME, true);
+        startActivityForResult(i, SplashActivity.REQUEST_GAME);
+    }
+
+    protected void launchNew() {
+        Intent i = new Intent(this, GameActivity.class);
+        i.putExtra(GameActivity.ARG_RESUME, false);
+        startActivityForResult(i, SplashActivity.REQUEST_GAME);
+    }
+
+    protected String getAppVersion() {
+        try {
+            return String.format(TEXT_VER, getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+        }
+        catch (PackageManager.NameNotFoundException e) {
+            // don't care
+        }
+        catch (NullPointerException e) {
+            // still don't care
+        }
+        return "";
     }
 
 }

@@ -137,7 +137,6 @@ public class BoardKeeper {
                 String hexBits = data.tiles.substring(at, at + 1);
                 at++;
                 int bits = Integer.parseInt(hexBits, 16);
-                if (bits == 1 || bits == 8) { bits = 15; }
                 board.setTile(colNum, rowNum, type, bits);
             }
         }

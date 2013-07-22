@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="color_source">#4080FF</color>
+	<color name="color_sink">#FF8040</color>
+	<color name="color_none">#808080</color>
+	<color name="color_arc">#EEEEEE</color>
+	<color name="color_score">#AAAAAA</color>
+	<color name="color_back">#000000</color>
+</resources>
