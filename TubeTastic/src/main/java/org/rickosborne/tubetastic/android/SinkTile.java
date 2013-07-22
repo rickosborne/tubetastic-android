@@ -4,19 +4,16 @@ import com.badlogic.gdx.graphics.Color;
 
 public class SinkTile extends BaseTile {
 
-    public static final Color COLOR_SINK = new Color(1.0f, 0.5f, 0.25f, 1.0f);
-
-    public SinkTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
-        super(colNum, rowNum, x, y, size, board);
-        init(colNum, rowNum, x, y, size, board);
+    public SinkTile(int colNum, int rowNum, GameBoard board) {
+        super(colNum, rowNum, board);
+        init(colNum, rowNum, board);
     }
 
     @Override
-    public void init(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
-        super.init(colNum, rowNum, x, y, size, board);
+    public void init(int colNum, int rowNum, GameBoard board) {
+        super.init(colNum, rowNum, board);
         super.setPower(Power.SUNK);
         outlets.setBits(Outlets.BIT_WEST);
-        resize(x, y, size);
     }
 
     @Override

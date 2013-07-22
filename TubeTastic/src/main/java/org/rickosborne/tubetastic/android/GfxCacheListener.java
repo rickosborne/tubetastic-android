@@ -17,10 +17,8 @@ public class GfxCacheListener implements ApplicationListener {
     private int width;
     private int height;
     private int tileSize;
-    private int tileX;
-    private int tileY;
-    private ArrayDeque<BaseTile> renderQueue;
-    private Actor lastTile;
+    private ArrayDeque<TileActor> renderQueue;
+    private TileActor lastTile;
     private final TileRenderer renderer = new TileRenderer();
 
     @Override
@@ -29,21 +27,19 @@ public class GfxCacheListener implements ApplicationListener {
         height = Gdx.graphics.getHeight();
         stage = new Stage(width, height, true);
         tileSize = getTileSize(GameActivity.COUNT_COLS, GameActivity.COUNT_ROWS, width, height);
-        tileX = (width - tileSize) / 2;
-        tileY = (height - tileSize) / 2;
-        renderQueue = new ArrayDeque<BaseTile>(RENDER_COUNT);
-        renderQueue.add(new SourceTile(0, 0, tileX, tileY, tileSize, null));
-        renderQueue.add(new SinkTile(0, 0, tileX, tileY, tileSize, null));
-        for (BaseTile.Power power : BaseTile.Power.values()) {
+        renderQueue = new ArrayDeque<TileActor>(RENDER_COUNT);
+        renderQueue.add(new TileActor(new SourceTile(0, 0, null), 0, 0, tileSize));
+        renderQueue.add(new TileActor(new SinkTile(0, 0, null), 0, 0, tileSize));
+        for (Power power : Power.values()) {
             for (int bits = 1; bits < 16; bits++) {
-                TubeTile tile = new TubeTile(0, 0, tileX, tileY, tileSize, bits, null);
+                TubeTile tile = new TubeTile(0, 0, bits, null);
                 tile.setPower(power);
-                renderQueue.add(tile);
+                renderQueue.add(new TileActor(tile, 0, 0, tileSize));
             }
         }
         lastTile = null;
         lastTile = renderQueue.pop();
-        ((BaseTile) lastTile).setRenderer(renderer);
+        lastTile.setRenderer(renderer);
         stage.addActor(lastTile);
         configureGL();
         Gdx.input.setInputProcessor(stage);
@@ -62,7 +58,7 @@ public class GfxCacheListener implements ApplicationListener {
                                     onCompleteCallback.run();
                                 }
                                 else {
-                                    ((BaseTile) lastTile).setRenderer(renderer);
+                                    lastTile.setRenderer(renderer);
                                     stage.addActor(lastTile);
                                 }
                             }

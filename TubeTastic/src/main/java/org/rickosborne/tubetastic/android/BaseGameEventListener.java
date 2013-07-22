@@ -10,12 +10,22 @@ public class BaseGameEventListener implements GameEventListener {
     }
 
     @Override
-    public boolean onVanishTiles(Set<TubeTile> tiles) {
+    public boolean onAppearTiles() {
         return INTERRUPT_NO;
     }
 
     @Override
-    public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles) {
+    public boolean onVanishTilesStart() {
+        return INTERRUPT_NO;
+    }
+
+    @Override
+    public boolean onVanishTilesFinish() {
+        return INTERRUPT_NO;
+    }
+
+    @Override
+    public boolean onDropTiles(Set<GameBoard.TileChangeMove> tiles) {
         return INTERRUPT_NO;
     }
 

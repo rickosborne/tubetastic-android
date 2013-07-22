@@ -9,9 +9,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 public class ProgressActor extends FreetypeActor {
 
     protected float percent = 0;
-    protected Color borderColor = BaseTile.COLOR_ARC;
-    protected Color doneColor = SourceTile.COLOR_POWER_SOURCED;
-    protected Color leftColor = SinkTile.COLOR_POWER_SUNK;
+    protected Color borderColor = TileActor.COLOR_ARC;
+    protected Color doneColor = TileActor.COLOR_POWER_SOURCED;
+    protected Color leftColor = TileActor.COLOR_POWER_SUNK;
     protected ShapeRenderer shape = new ShapeRenderer();
 
     public ProgressActor(String fontName, Alignment alignment, String possibleChars, boolean isFixedWidth, Color color) {

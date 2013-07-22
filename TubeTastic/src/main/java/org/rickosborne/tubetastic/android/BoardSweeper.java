@@ -1,9 +1,8 @@
 package org.rickosborne.tubetastic.android;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import android.util.Log;
+
+import java.util.*;
 
 public class BoardSweeper {
 
@@ -11,14 +10,10 @@ public class BoardSweeper {
         public TubeTile tile;
         public int colNum;
         public int rowNum;
-        public float colX;
-        public float rowY;
-        public DroppedTile(TubeTile tile, int colNum, int rowNum, float colX, float rowY) {
+        public DroppedTile(TubeTile tile, int colNum, int rowNum) {
             this.tile  = tile;
             this.colNum = colNum;
             this.rowNum = rowNum;
-            this.colX   = colX;
-            this.rowY   = rowY;
         }
     }
 
@@ -26,49 +21,34 @@ public class BoardSweeper {
     public HashSet<BaseTile> sunk;
     public HashSet<BaseTile> neither;
     public HashSet<BaseTile> connected;
-    public HashSet<TubeTile> vanished;
-    public HashSet<DroppedTile> dropped;
-    public HashSet<DroppedTile> added;
-    public HashSet<TubeTile> fell;
-    public List<TileChangePower> powered;
     public int maxTileCount;
 
-    public static class TileChangePower {
-        public BaseTile tile;
-        public BaseTile.Power power;
-        public TileChangePower(BaseTile tile, BaseTile.Power power) {
-            this.tile  = tile;
-            this.power = power;
-        }
-    }
-//        private static class TileChangeMove extends TileChange {
-//            public int colNum;
-//            public int rowNum;
-//            public TileChangeMove(BaseTile tile, int colNum, int rowNum) {
-//                super(tile);
-//                this.colNum = colNum;
-//                this.rowNum = rowNum;
-//            }
-//        }
-//        private static class TileChangeVanish extends TileChange {
-//            public TileChangeVanish(BaseTile tile) {
-//                super(tile);
-//            }
-//        }
     public BoardSweeper(int maxTileCount) {
+        // Log.d("BoardSweeper", String.format("maxTileCount:%d", maxTileCount));
+        this.maxTileCount = maxTileCount;
         sourced   = new HashSet<BaseTile>(maxTileCount);
         sunk      = new HashSet<BaseTile>(maxTileCount);
         neither   = new HashSet<BaseTile>(maxTileCount);
         connected = new HashSet<BaseTile>(maxTileCount);
-        vanished  = new HashSet<TubeTile>(maxTileCount);
-        dropped   = new HashSet<DroppedTile>(maxTileCount);
-        added     = new HashSet<DroppedTile>(maxTileCount);
-        fell      = new HashSet<TubeTile>(maxTileCount);
-        powered   = new ArrayList<TileChangePower>(maxTileCount);
-        this.maxTileCount = maxTileCount;
         reset();
     }
-    public void resetNeither(GameBoard board) {
+
+    public GameBoard.TileChangeSet sweep(GameBoard board) {
+        // Log.d("BoardSweeper", "sweep");
+        GameBoard.TileChangeSet changes = new GameBoard.TileChangeSet(maxTileCount);
+        reset();
+        resetNeither(board, changes);
+        trackSourced(board, changes);
+        trackSunk(board, changes);
+        trackUnpowered(board, changes);
+        trackVanishes(board, changes);
+        if (!connected.isEmpty()) {
+            trackDrops(board, changes);
+        }
+        return changes;
+    }
+
+    protected void resetNeither(GameBoard board, GameBoard.TileChangeSet changes) {
         int colCount = board.getColCount();
         int rowCount = board.getRowCount();
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
@@ -77,7 +57,7 @@ public class BoardSweeper {
             }
         }
     }
-    public void trackSourced(GameBoard board) {
+    protected void trackSourced(GameBoard board, GameBoard.TileChangeSet changes) {
         int lastRowNum = board.getRowCount() - 1;
         int sourceColNum = 0;
         ArrayDeque<BaseTile> sourcedList = new ArrayDeque<BaseTile>(maxTileCount);
@@ -96,7 +76,7 @@ public class BoardSweeper {
             if (tile instanceof SinkTile) {
                 connected.add(tile);
             } else if ((tile instanceof TubeTile) && !tile.isSourced()) {
-                powered.add(new TileChangePower(tile, BaseTile.Power.SOURCED));
+                changes.powered.add(new GameBoard.TileChangePower((TubeTile) tile, Power.SOURCED));
             }
             for (BaseTile neighbor : tile.getConnectedNeighbors()) {
                 if ((neighbor != null) && !sourced.contains(neighbor) && !sourcedList.contains(neighbor)) {
@@ -105,7 +85,7 @@ public class BoardSweeper {
             }
         }
     }
-    public void trackSunk(GameBoard board) {
+    protected void trackSunk(GameBoard board, GameBoard.TileChangeSet changes) {
         int lastRowNum = board.getRowCount() - 1;
         int sinkColNum = board.getColCount() - 1;
         ArrayDeque<BaseTile> sunkList = new ArrayDeque<BaseTile>(maxTileCount);
@@ -122,7 +102,7 @@ public class BoardSweeper {
                 continue;
             }
             if (!tile.isSunk()) {
-                powered.add(new TileChangePower(tile, BaseTile.Power.SUNK));
+                changes.powered.add(new GameBoard.TileChangePower((TubeTile) tile, Power.SUNK));
 //                    tile.setPower(BaseTile.Power.SUNK);
             }
             sunk.add(tile);
@@ -134,16 +114,16 @@ public class BoardSweeper {
             }
         }
     }
-    public void trackUnpowered(GameBoard board) {
+    protected void trackUnpowered(GameBoard board, GameBoard.TileChangeSet changes) {
         // reset any leftover tiles
         for (BaseTile tile : neither) {
             if ((tile != null) && !tile.isUnpowered()) {
-                powered.add(new TileChangePower(tile, BaseTile.Power.NONE));
+                changes.powered.add(new GameBoard.TileChangePower((TubeTile) tile, Power.NONE));
 //                    tile.setPower(BaseTile.Power.NONE);
             }
         }
     }
-    public void trackVanishes(GameBoard board) {
+    protected void trackVanishes(GameBoard board, GameBoard.TileChangeSet changes) {
         ArrayDeque<BaseTile> vanishList = new ArrayDeque<BaseTile>(maxTileCount);
         vanishList.addAll(connected);
         while (vanishList.size() > 0) {
@@ -158,44 +138,35 @@ public class BoardSweeper {
                 }
             }
             if ((tile instanceof TubeTile)) {
-                vanished.add((TubeTile) tile);
+                changes.vanished.add((TubeTile) tile);
             }
         }
     }
-    public void trackDrops(GameBoard board) {
+    protected void trackDrops(GameBoard board, GameBoard.TileChangeSet changes) {
         int rowCount = board.getRowCount();
         int colCount = board.getColCount();
         for (int colNum = 1; colNum <= colCount - 2; colNum++) {
             int destRowNum = rowCount;
-            float colX = board.xForColNum(colNum);
             for (int rowNum = rowCount - 1; rowNum >= 0; rowNum--) {
                 TubeTile tile = (TubeTile) board.getTile(colNum, rowNum);
-                if ((tile != null) && !vanished.contains(tile)) {
+                if ((tile != null) && !changes.vanished.contains(tile)) {
                     destRowNum--;
                     if (destRowNum > rowNum) {
-                        dropped.add(new DroppedTile(tile, colNum, destRowNum, colX, board.yForRowNum(destRowNum)));
+                        changes.moved.add(new GameBoard.TileChangeMove(tile, colNum, rowNum, colNum, destRowNum));
                     }
                 }
             }
             for (int rowNum = destRowNum - 1; rowNum >= 0; rowNum--) {
-//                    toDropCount++;
-//                    TubeTile tile = new TubeTile(-2, -2, colX, yForRowNum(rowNum - destRowNum), tileSize, this);
-                added.add(new DroppedTile(null, colNum, rowNum, colX, board.yForRowNum(rowNum - destRowNum)));
-//                    addActor(tile);
+                changes.appeared.add(new GameBoard.TileChangeAppear(colNum, rowNum));
             }
         }
     }
 
-    public void reset() {
+    protected void reset() {
         sourced.clear();
         sunk.clear();
         neither.clear();
         connected.clear();
-        powered.clear();
-        dropped.clear();
-        added.clear();
-        vanished.clear();
-        fell.clear();
     }
 }
 

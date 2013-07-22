@@ -14,7 +14,7 @@ public class TileRenderer {
     public static final int BITS_SUNK    = 100;
     public static final int TILE_COUNT   = (16 * 3) + 2;
     public static final int SCALE_OVERSIZE = 2;
-    private static final Color COLOR_ERASE = new Color(BaseTile.COLOR_ARC.r, BaseTile.COLOR_ARC.g, BaseTile.COLOR_ARC.b, 0f);
+    private static final Color COLOR_ERASE = new Color(TileActor.COLOR_ARC.r, TileActor.COLOR_ARC.g, TileActor.COLOR_ARC.b, 0f);
 
     private class TileCacheItem {
         int bits;
@@ -45,16 +45,16 @@ public class TileRenderer {
         cache = new SparseArray<TileCacheItem>(TILE_COUNT);
     }
 
-    public void loadTile(BaseTile tile) {
-        getItemForTile(tile);
+    public void loadTile(BaseTile tile, int tileSize) {
+        getItemForTile(tile, tileSize);
     }
 
-    public TextureRegion getTextureRegionForTile(BaseTile tile) {
-        return getItemForTile(tile).region;
+    public TextureRegion getTextureRegionForTile(BaseTile tile, int tileSize) {
+        return getItemForTile(tile, tileSize).region;
     }
 
-    public Texture getTextureForTile(BaseTile tile) {
-        return getItemForTile(tile).texture;
+    public Texture getTextureForTile(BaseTile tile, int tileSize) {
+        return getItemForTile(tile, tileSize).texture;
     }
 
     private static int getBitsForTile(BaseTile tile) {
@@ -75,9 +75,9 @@ public class TileRenderer {
         return bits;
     }
 
-    private TileCacheItem getItemForTile(BaseTile tile) {
+    private TileCacheItem getItemForTile(BaseTile tile, int tileSize) {
         int bits = getBitsForTile(tile);
-        int size = MathUtils.nextPowerOfTwo((int) tile.getWidth());
+        int size = MathUtils.nextPowerOfTwo(tileSize);
         TileCacheItem item = cache.get(bits, null);
         if ((item != null) && (item.size == size)) {
             return item;
@@ -96,7 +96,7 @@ public class TileRenderer {
 
     private static void drawArc(Pixmap target, int x, int y, int innerRadius, int outerRadius) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(BaseTile.COLOR_ARC);
+        target.setColor(TileActor.COLOR_ARC);
         target.fillCircle(x, y, outerRadius);
         Pixmap.setBlending(Pixmap.Blending.None);
         target.setColor(COLOR_ERASE);
@@ -105,7 +105,7 @@ public class TileRenderer {
 
     private static void drawHLine(Pixmap target, int x, int y, int width, int thickness) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(BaseTile.COLOR_ARC);
+        target.setColor(TileActor.COLOR_ARC);
         int halfThickness = (thickness / 2);
         int bottom = y - halfThickness;
         target.fillRectangle(x, bottom, width, thickness);
@@ -113,7 +113,7 @@ public class TileRenderer {
 
     private static void drawVLine(Pixmap target, int x, int y, int height, int thickness) {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
-        target.setColor(BaseTile.COLOR_ARC);
+        target.setColor(TileActor.COLOR_ARC);
         target.fillRectangle(x - (thickness / 2), y, thickness, height);
     }
 
@@ -123,13 +123,13 @@ public class TileRenderer {
         int bits = tile.getBits();
         int halfStep = SCALE_OVERSIZE / 2;
         int halfSize = tileSize / 2 - halfStep;
-        int padding = (int) (tileSize * BaseTile.SIZE_PADDING);
+        int padding = (int) (tileSize * TileActor.SIZE_PADDING);
         int radius = halfSize - (padding * 2);
         Color backColor;
         switch (tile.power) {
-            case SOURCED: backColor = SourceTile.COLOR_POWER_SOURCED; break;
-            case SUNK: backColor = SinkTile.COLOR_POWER_SUNK; break;
-            default: backColor = TubeTile.COLOR_POWER_NONE; break;
+            case SOURCED: backColor = TileActor.COLOR_POWER_SOURCED; break;
+            case SUNK: backColor = TileActor.COLOR_POWER_SUNK; break;
+            default: backColor = TileActor.COLOR_POWER_NONE; break;
         }
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
         Pixmap.setFilter(Pixmap.Filter.BiLinear);
@@ -160,7 +160,7 @@ public class TileRenderer {
             oversize.fillCircle(rightX - cornerRadius, topY - cornerRadius, cornerRadius);
         }
         Pixmap arcs = new Pixmap(tileSize, tileSize, Pixmap.Format.RGBA8888);
-        int arcSize = (int) (tileSize * BaseTile.SIZE_ARCWIDTH);
+        int arcSize = (int) (tileSize * TileActor.SIZE_ARCWIDTH);
         int halfArcSize = arcSize / 2;
         int arcLow = halfSize - halfArcSize;
         int arcHigh = halfSize + halfArcSize;
@@ -200,8 +200,9 @@ public class TileRenderer {
         Pixmap.setBlending(Pixmap.Blending.SourceOver);
         Pixmap.setFilter(Pixmap.Filter.BiLinear);
         pixmap.drawPixmap(oversize, 0, 0, tileSize, tileSize, 0, 0, size, size);
-        pixmap.drawPixmap(arcs, 0, 0, tileSize, tileSize, 0, 0, size, size);
         oversize.dispose();
+        pixmap.drawPixmap(arcs, 0, 0, tileSize, tileSize, 0, 0, size, size);
+        arcs.dispose();
         return pixmap;
     }
 

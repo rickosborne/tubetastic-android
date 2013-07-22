@@ -69,7 +69,7 @@ public class FreetypeActor extends Actor {
     }
 
     public static void flushCache() {
-        Log.d("FreetypeActor", "flushCache");
+        // Log.d("FreetypeActor", "flushCache");
         cache.evictAll();
     }
 
@@ -148,7 +148,7 @@ public class FreetypeActor extends Actor {
         }
         BitmapFont font = getItem().getFont();
         TextBounds bounds = new TextBounds(font.getBounds(text));
-//        Log.d("FreeTypeActor", String.format("resetOrigin \"%s\" b(%.0f,%.0f)", text, bounds.width, bounds.height));
+//        // Log.d("FreeTypeActor", String.format("resetOrigin \"%s\" b(%.0f,%.0f)", text, bounds.width, bounds.height));
         float originX;
         float originY;
         if ((alignment == Alignment.NORTH) || (alignment == Alignment.NORTHEAST) || (alignment == Alignment.NORTHWEST)) {

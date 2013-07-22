@@ -6,10 +6,9 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 
 import java.util.HashSet;
+import java.util.Set;
 
-public class GameBoard extends Group implements RenderController, TileLoaderActor.TileLoaderWatcher {
-
-    public static final float DELAY_SWEEP = 0.125f;
+public class GameBoard {
 
     public static enum TILE_TYPE {
         SOURCE,
@@ -17,90 +16,88 @@ public class GameBoard extends Group implements RenderController, TileLoaderActo
         SINK
     }
 
-    public static enum EVENT_TYPE {
-        TILE_SPIN,
-        TILES_VANISH,
-        TILES_DROP,
-        BOARD_VANISH,
-        BOARD_RANDOM,
-        BOARD_SETTLE
+    public interface Watcher {
+//        public void onBoardChanged(TileChangeSet changes);
+        public void onScoreChanged(int fromScore, int toScore);
+    }
+
+    public static class TileChangeSet {
+        public Set<TileChangeMove> moved;
+        public Set<TileChangePower> powered;
+        public Set<TubeTile> vanished;
+        public Set<TileChangeAppear> appeared;
+        public TileChangeSet(int maxTileCount) {
+            moved = new HashSet<TileChangeMove>(maxTileCount);
+            powered = new HashSet<TileChangePower>(maxTileCount);
+            vanished = new HashSet<TubeTile>(maxTileCount);
+            appeared = new HashSet<TileChangeAppear>(maxTileCount);
+        }
+    }
+    public static class TileChange {
+        public BaseTile tile;
+        public TileChange(BaseTile tile) {
+            this.tile = tile;
+        }
+    }
+    public static class TileChangePower extends TileChange {
+        public Power power;
+        public TileChangePower(TubeTile tile, Power power) {
+            super(tile);
+            this.power = power;
+        }
+    }
+    public static class TileChangeMove extends TileChange {
+        public int fromColNum;
+        public int fromRowNum;
+        public int toColNum;
+        public int toRowNum;
+        public TileChangeMove(TubeTile tile, int fromColNum, int fromRowNum, int toColNum, int toRowNum) {
+            super(tile);
+            this.fromColNum = fromColNum;
+            this.fromRowNum = fromRowNum;
+            this.toColNum = toColNum;
+            this.toRowNum = toRowNum;
+        }
+    }
+    public static class TileChangeAppear {
+        public int colNum;
+        public int rowNum;
+        public TileChangeAppear(int colNum, int rowNum) {
+            this.colNum = colNum;
+            this.rowNum = rowNum;
+        }
     }
 
     private int rowCount = 0;
     private int colCount = 0;
     private BaseTile[][] board;
-    private boolean settled = false;
     private int score = 0;
-    private float tileSize = 0;
-    private boolean ready = false;
-    private boolean awaitingSweep = false;
     private BoardSweeper sweeper;
-    private final float SCORE_HEIGHT = 0.08f;
-    private float scoreHeight = 0;
-    private ScoreActor scoreBoard;
-    private ScoreKeeper scoreKeeper;
-    protected final TileRenderer renderer = new TileRenderer();
-    protected HashSet<GameEventListener> eventListeners = new HashSet<GameEventListener>();
-    protected RenderControls renderControls;
-    protected TileLoaderActor tileLoader;
-    protected boolean isLoading = false;
-    protected int[] tileBits;
+    protected Watcher watcher;
+    protected boolean settled = false;
 
-    public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight) {
+    public GameBoard(int colCount, int rowCount) {
         super();
-        init(colCount, rowCount, maxWidth, maxHeight);
+        init(colCount, rowCount);
     }
 
-    public GameBoard(int colCount, int rowCount, int maxWidth, int maxHeight, ScoreKeeper scoreKeeper) {
-        this(colCount, rowCount, maxWidth, maxHeight);
-        this.scoreKeeper = scoreKeeper;
-    }
-
-    private void init(int colCount, int rowCount, int maxWidth, int maxHeight) {
+    private void init(int colCount, int rowCount) {
+        // Log.d("GameBoard", String.format("init cols:%d rows:%d", colCount, rowCount));
         this.rowCount = rowCount;
         this.colCount = colCount;
-        FreetypeActor.flushCache();
         board = new BaseTile[rowCount][colCount];
-        resizeToMax(maxWidth, maxHeight);
-        settled = false;
         score = 0;
-        setTransform(false);
         sweeper = new BoardSweeper(rowCount * colCount);
-    }
-
-    public void loadTiles(int... bits) {
-        clear();
-        isLoading = true;
-        tileBits = bits;
-        tileLoader = new TileLoaderActor((int) tileSize, renderer, this);
-        if ((tileBits != null) && (tileBits.length > 0)) {
-            tileLoader.setBits(tileBits);
-        }
-        float loaderX = 0;
-        float loaderY = 0;
-        float loaderW = getWidth();
-        float loaderH = getHeight();
-        float loaderRatio = loaderW / loaderH;
-        if (loaderRatio > 8f) {
-            loaderX = (loaderW - (loaderH * 8f)) / 2f;
-            loaderW = loaderH * 8f;
-        }
-        else {
-            loaderY = (loaderH - (loaderW / 8f)) / 2f;
-            loaderH = loaderW / 8f;
-        }
-        tileLoader.setBounds(loaderX, loaderY, loaderW, loaderH);
-        addActor(tileLoader);
+        settled = false;
     }
 
     public void randomizeTiles() {
-        ready = false;
+        // Log.d("GameBoard", "randomizeTiles");
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
-                BaseTile tile = tileAt(colNum, rowNum);
+                BaseTile tile = getTile(colNum, rowNum);
                 if (tile != null) {
-                    removeActor(tile);
                     setTile(colNum, rowNum, null);
                 }
                 TILE_TYPE type;
@@ -116,91 +113,11 @@ public class GameBoard extends Group implements RenderController, TileLoaderActo
                 setTile(colNum, rowNum, type, 0);
             }
         }
-        notifyListeners(EVENT_TYPE.BOARD_RANDOM);
-    }
-
-    public void begin() {
-        if (isLoading) {
-            return;
-        }
-        final GameBoard self = this;
-        addListener(new InputListener() {
-            @Override
-            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                try {
-                    if (!event.isHandled() && self.isReady() && self.isSettled()) {
-                        BaseTile tile = self.tileAt(x, y);
-                        if ((tile != null) && (tile instanceof TubeTile)) {
-                            self.startRendering();
-                            if (!self.notifyListeners(EVENT_TYPE.TILE_SPIN, tile)) {
-                                ((TubeTile) tile).onTouchDown();
-                            }
-                        }
-                    }
-                }
-                catch (Exception e) {
-                    Log.e("GameBoard", String.format("touch exception: %s", e.toString()));
-                }
-                return true;
-            }
-        });
-        setTouchable(Touchable.enabled);
-        awaitingSweep = true;
-        powerSweep();
-    }
-
-    public void resizeToMax(int maxWidth, int maxHeight) {
-        if ((getWidth() == maxWidth) && (getHeight() == maxHeight)) {
-            return;
-        }
-        if (scoreKeeper == null) {
-            scoreHeight = 0;
-            scoreBoard = null;
-        } else {
-            scoreHeight = maxHeight * SCORE_HEIGHT;
-            if (scoreBoard == null) {
-                scoreBoard = new ScoreActor();
-            }
-        }
-        float availableHeight = maxHeight - scoreHeight;
-        tileSize = Math.min(maxWidth / colCount, availableHeight / rowCount);
-        float w = Math.round(colCount * tileSize);
-        float h = Math.round((rowCount * tileSize) + scoreHeight);
-        setSize(w, h);
-        float x = (maxWidth - w) / 2f;
-        float y =  (maxHeight - h) / 2f;
-        setPosition(x, y);
-//        Log.d("GameBoard", String.format("resizeToMax mw:%d mh:%d ah:%.0f sh:%.0f sz:%.0f w:%.0f h:%.0f x:%.0f y:%.0f", maxWidth, maxHeight, availableHeight, scoreHeight, tileSize, w, h, x, y));
-        if (scoreBoard != null) {
-            scoreBoard.resize(0, 0, w, scoreHeight);
-        }
-        for (int colNum = 0; colNum < colCount; colNum++) {
-            float colX = xForColNum(colNum);
-            for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-                BaseTile tile = getTile(colNum, rowNum);
-                if (tile != null) {
-                    tile.resize(colX, yForRowNum(rowNum), tileSize);
-                }
-            }
-        }
-    }
-
-    public float xForColNum(int colNum) {
-        return (colNum * tileSize);
-    }
-
-    public float yForRowNum(int rowNum) {
-        return ((rowCount - 1 - rowNum) * tileSize) + scoreHeight;
-    }
-
-    public BaseTile tileAt(float x, float y) {
-        int colNum = (int) (x / tileSize);
-        int rowNum = rowCount - 1 - ((int) ((y - scoreHeight) / tileSize));
-        return getTile(colNum, rowNum);
+        sweepUntilSettled();
     }
 
     public BaseTile getTile(int colNum, int rowNum) {
-        if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
+        if ((colNum >= 0) && (rowNum >= 0) && (rowNum < board.length) && (colNum < board[rowNum].length)) {
             return board[rowNum][colNum];
         }
         return null;
@@ -209,8 +126,9 @@ public class GameBoard extends Group implements RenderController, TileLoaderActo
     public BaseTile setTile(int colNum, int rowNum, BaseTile tile) {
         if ((colNum >= 0) && (colNum < colCount) && (rowNum >= 0) && (rowNum < rowCount)) {
             board[rowNum][colNum] = tile;
-            if ((tile != null) && (!isLoading)) {
-                addActor(tile);
+            if ((tile != null) && ((tile.colNum != colNum) || (tile.rowNum != rowNum))) {
+                // Log.d("GameBoard", String.format("setting %s to col:%d row:%d", tile, colNum, rowNum));
+                tile.setColRow(colNum, rowNum);
             }
         }
         return tile;
@@ -220,291 +138,87 @@ public class GameBoard extends Group implements RenderController, TileLoaderActo
         BaseTile tile;
         switch (type) {
             case SOURCE:
-                tile = new SourceTile(colNum, rowNum, xForColNum(colNum), yForRowNum(rowNum), tileSize, this);
+                tile = new SourceTile(colNum, rowNum, this);
                 break;
             case SINK:
-                tile = new SinkTile(colNum, rowNum, xForColNum(colNum), yForRowNum(rowNum), tileSize, this);
+                tile = new SinkTile(colNum, rowNum, this);
                 break;
             default:
-                tile = new TubeTile(colNum, rowNum, xForColNum(colNum), yForRowNum(rowNum), tileSize, bits, this);
+                tile = new TubeTile(colNum, rowNum, bits, this);
                 break;
         }
-        tile.setRenderer(renderer);
         return setTile(colNum, rowNum, tile);
-    }
-
-    public TubeTile setTile(float x, float y) {
-        TubeTile tile = (TubeTile) setTile(-2, -2, TILE_TYPE.TUBE, 0);
-        tile.setPosition(x, y);
-        if (!isLoading) {
-            addActor(tile);
-        }
-        return tile;
     }
 
     public int getRowCount() { return rowCount; }
     public int getColCount() { return colCount; }
     public int getScore() { return score; }
     public void setScore(int score) {
-        this.score = score;
-        if (scoreKeeper != null) {
-            scoreKeeper.addScore(score);
+        int oldScore = this.score;
+        if (score == oldScore) {
+            return;
         }
-        if (scoreBoard != null) {
-            scoreBoard.setScore(score);
+        this.score = score;
+        // Log.d("GameBoard", String.format("setScore old:%d new:%d", oldScore, score));
+        if (watcher != null) {
+            watcher.onScoreChanged(oldScore, score);
         }
     }
     public void addScore(int score) { setScore(this.score + score); }
 
-    private void powerSweep() {
-        if (!awaitingSweep) {
-            return;
+    protected void sweepUntilSettled() {
+        // Log.d("GameBoard", String.format("sweepUntilSettled cc:%d rc:%d", colCount, rowCount));
+        while (!isSettled()) {
+            powerSweep();
         }
-        awaitingSweep = false;
-        ready = false;
-        sweeper.reset();
-        sweeper.resetNeither(this);
-        sweeper.trackSourced(this);
-        sweeper.trackSunk(this);
-        sweeper.trackUnpowered(this);
-        sweeper.trackVanishes(this);
-        for (BoardSweeper.TileChangePower tilePower : sweeper.powered) {
+    }
+
+    public TileChangeSet powerSweep() {
+        // Log.d("GameBoard", "powerSweep");
+        TileChangeSet changes = sweeper.sweep(this);
+        for (TileChangePower tilePower : changes.powered) {
             if ((tilePower == null) || (tilePower.tile == null)) {
                 continue;
             }
             tilePower.tile.setPower(tilePower.power);
         }
-        if (sweeper.powered.size() > 0) {
-            requestRender();
-        }
-        // gather any connected tiles
-        if (sweeper.connected.isEmpty()) {
-            ready = true;
-            if (!settled) {
-                notifyListeners(EVENT_TYPE.BOARD_SETTLE);
+        for (TubeTile tile : changes.vanished) {
+            if (tile != null) {
+                // Log.d("GameBoard", String.format("powerSweep vanishing %s", tile));
+                setTile(tile.colNum, tile.rowNum, null);
+                tile.vanish();
+            } else {
+                Log.e("GameBoard", "powerSweep vanished null tile");
             }
+        }
+        for (TileChangeMove move : changes.moved) {
+            if ((move != null) && (move.tile != null)) {
+                // Log.d("GameBoard", String.format("powerSweep moving %s from %d,%d to %d,%d", move.tile, move.fromColNum, move.fromRowNum, move.toColNum, move.toRowNum));
+//                setTile(move.fromColNum, move.fromRowNum, null);
+                setTile(move.toColNum, move.toRowNum, move.tile);
+                move.tile.setColRow(move.toColNum, move.toRowNum);
+            } else {
+                Log.e("GameBoard", "powerSweep moved null tile");
+            }
+        }
+        for (TileChangeAppear appear : changes.appeared) {
+            // Log.d("GameBoard", String.format("powerSweep appearing new tile at %d,%d", appear.colNum, appear.rowNum));
+            setTile(appear.colNum, appear.rowNum, new TubeTile(appear.colNum, appear.rowNum, this));
+        }
+        if (settled) {
+            addScore(changes.vanished.size());
+//            if (watcher != null) {
+//                watcher.onBoardChanged(changes);
+//            }
+        } else if ((changes.appeared.size()) == 0 && (changes.vanished.size()) == 0 && (changes.moved.size() == 0)) {
             settled = true;
-            stopRendering();
-        } else {
-            sweeper.trackDrops(this);
-            if (sweeper.vanished.size() == (colCount - 2) * rowCount) {
-                notifyListeners(EVENT_TYPE.BOARD_VANISH);
-            } else {
-                notifyListeners(EVENT_TYPE.TILES_VANISH);
-            }
-            for (TubeTile vanishTile : new HashSet<TubeTile>(sweeper.vanished)) {
-                if (vanishTile != null) {
-                    vanishTile.vanish();
-                }
-            }
-            if (settled) {
-                score += sweeper.vanished.size();
-                if (scoreBoard != null) {
-                    scoreBoard.setScore(score);
-                }
-            } else {
-                readyForSweep();
-            }
+            return null;
         }
+        return changes;
     }
-
-    public BaseTile tileAt(int colNum, int rowNum) {
-        if ((colNum >= 0) && (rowNum >= 0) && (colNum < colCount) && (rowNum < rowCount)) {
-            return board[rowNum][colNum];
-        }
-        return null;
-    }
-
-    public boolean isReady() { return ready; }
 
     public boolean isSettled() { return settled; }
 
-    public void tileDropComplete(TubeTile tile, int destinationColNum, int destinationRowNum) {
-        if (sweeper.fell.contains(tile)) {
-            setTile(destinationColNum, destinationRowNum, tile);
-            sweeper.fell.remove(tile);
-            if (sweeper.fell.isEmpty()) {
-                readyForSweep();
-            }
-        } else {
-            Log.e("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), sweeper.fell.size()));
-        }
-    }
-
-    public void tileVanishComplete(TubeTile vanishedTile) {
-        if (sweeper.vanished.contains(vanishedTile)) {
-//            Gdx.app.log("GameBoard", String.format("vanish removed:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
-            setTile(vanishedTile.colNum, vanishedTile.rowNum, null);
-            removeActor(vanishedTile);
-            sweeper.vanished.remove(vanishedTile);
-            if (sweeper.vanished.isEmpty()) {
-                if (notifyListeners(EVENT_TYPE.TILES_DROP)) {
-                    return;
-                }
-                for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
-                    setTile(droppedTile.tile.colNum, droppedTile.tile.rowNum, null);
-                    sweeper.fell.add(droppedTile.tile);
-                }
-                for (BoardSweeper.DroppedTile addedTile : sweeper.added) {
-                    addedTile.tile = setTile(addedTile.colX, addedTile.rowY);
-                    sweeper.fell.add(addedTile.tile);
-                }
-                for (BoardSweeper.DroppedTile droppedTile : sweeper.dropped) {
-                    droppedTile.tile.dropTo(droppedTile.colNum, droppedTile.rowNum, droppedTile.colX, droppedTile.rowY);
-                }
-                for (BoardSweeper.DroppedTile addedTile : sweeper.added) {
-                    addedTile.tile.dropTo(addedTile.colNum, addedTile.rowNum, addedTile.colX, yForRowNum(addedTile.rowNum));
-                }
-            }
-        } else {
-            Log.e("GameBoard", String.format("vanish MISSING:%s remain:%d", vanishedTile.toString(), sweeper.vanished.size()));
-        }
-    }
-
-    public void interruptSweep() {
-        awaitingSweep = false;
-        clearActions();
-    }
-
-    public void readyForSweep() {
-        final GameBoard self = this;
-        awaitingSweep = true;
-        clearActions();
-        addAction(Actions.sequence(
-                Actions.delay(DELAY_SWEEP),
-                Actions.run(new Runnable() {
-                    @Override
-                    public void run() {
-                        self.powerSweep();
-                    }
-                })
-        ));
-    }
-
-    public void setScoreKeeper(ScoreKeeper keeper) {
-        scoreKeeper = keeper;
-        if (scoreKeeper == null) {
-            removeActor(scoreBoard);
-            scoreBoard = null;
-        } else {
-            if (!isLoading) {
-                scoreBoard = new ScoreActor();
-                addActor(scoreBoard);
-            }
-            if (score > 0) {
-                scoreKeeper.addScore(score);
-                scoreBoard.setScore(score);
-            }
-        }
-        requestRender();
-    }
-
-    public void addGameEventListener(GameEventListener listener) {
-        if (!eventListeners.contains(listener)) {
-            eventListeners.add(listener);
-        }
-    }
-
-    public void removeGameEventListener(GameEventListener listener) {
-        if (eventListeners.contains(listener)) {
-            eventListeners.remove(listener);
-        }
-    }
-
-    public void removeAllGameEventListeners() {
-        eventListeners.clear();
-    }
-
-    private boolean notifyListeners(EVENT_TYPE type) {
-        boolean interrupt = false;
-        for (GameEventListener listener : eventListeners) {
-            switch (type) {
-                case BOARD_RANDOM:
-                    interrupt = interrupt || listener.onRandomizeBoard(this);
-                    break;
-                case BOARD_SETTLE:
-                    interrupt = interrupt || listener.onSettleBoard(this);
-                    break;
-                case BOARD_VANISH:
-                    interrupt = interrupt || listener.onVanishBoard(this);
-                    break;
-                case TILES_DROP:
-                    interrupt = interrupt || listener.onDropTiles(sweeper.dropped);
-                    break;
-                case TILES_VANISH:
-                    interrupt = interrupt || listener.onVanishTiles(sweeper.vanished);
-                    break;
-            }
-        }
-        return interrupt;
-    }
-
-    private boolean notifyListeners(EVENT_TYPE type, BaseTile tile) {
-        boolean interrupt = false;
-        for (GameEventListener listener : eventListeners) {
-            switch (type) {
-                case TILE_SPIN:
-                    interrupt = interrupt || listener.onSpinTile(tile);
-                    break;
-            }
-        }
-        return interrupt;
-    }
-
-    public void setRenderControls(RenderControls renderControls) {
-        this.renderControls = renderControls;
-    }
-
-    private void startRendering() {
-        if (renderControls != null) {
-            renderControls.startRendering();
-        }
-    }
-
-    private void stopRendering() {
-        if (renderControls != null) {
-            renderControls.stopRendering();
-        }
-    }
-
-    private void requestRender() {
-        if (renderControls != null) {
-            renderControls.requestRender();
-        }
-    }
-
-    private boolean isRendering() {
-        return (renderControls == null) || renderControls.isContinuousRendering();
-    }
-
-    private void addGameActors() {
-        if (scoreKeeper != null) {
-            if (scoreBoard == null) {
-                scoreBoard = new ScoreActor();
-            }
-            addActor(scoreBoard);
-        }
-        for (int colNum = 0; colNum < colCount; colNum++) {
-            for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-                BaseTile tile = tileAt(colNum, rowNum);
-                if (tile != null) {
-                    addActor(tile);
-                }
-            }
-        }
-        requestRender();
-    }
-
-    @Override
-    public void onTileLoadComplete() {
-//        Log.d("GameBoard", "onTileLoadComplete");
-        if (tileLoader != null) {
-            tileLoader.remove();
-            tileLoader = null;
-            addGameActors();
-        }
-        isLoading = false;
-        begin();
-    }
+    public void setWatcher (GameBoard.Watcher watcher) { this.watcher = watcher; }
 
 }

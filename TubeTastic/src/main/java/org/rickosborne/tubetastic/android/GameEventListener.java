@@ -9,9 +9,12 @@ public interface GameEventListener {
 
     public boolean onSpinTile(BaseTile tile);
 
-    public boolean onVanishTiles(Set<TubeTile> tiles);
+    public boolean onAppearTiles();
 
-    public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles);
+    public boolean onVanishTilesStart();
+    public boolean onVanishTilesFinish();
+
+    public boolean onDropTiles(Set<GameBoard.TileChangeMove> tiles);
 
     public boolean onVanishBoard(GameBoard board);
 

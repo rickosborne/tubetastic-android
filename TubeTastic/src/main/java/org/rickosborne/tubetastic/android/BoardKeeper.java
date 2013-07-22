@@ -125,8 +125,8 @@ public class BoardKeeper {
         (new SaveGameData(colCount, rowCount, tiles.toString(), board.getScore())).saveTo(prefs);
     }
 
-    public static GameBoard loadBoard (int maxWidth, int maxHeight, SaveGameData data) {
-        GameBoard board = new GameBoard(data.colCount, data.rowCount, maxWidth, maxHeight);
+    public static GameBoard loadBoard (SaveGameData data) {
+        GameBoard board = new GameBoard(data.colCount, data.rowCount);
         board.setScore(data.score);
         int at = 0;
         for (int rowNum = 0; rowNum < data.rowCount; rowNum++) {
@@ -137,26 +137,32 @@ public class BoardKeeper {
                 String hexBits = data.tiles.substring(at, at + 1);
                 at++;
                 int bits = Integer.parseInt(hexBits, 16);
+                if (bits == 1 || bits == 8) { bits = 15; }
                 board.setTile(colNum, rowNum, type, bits);
             }
         }
         return board;
     }
 
-    public GameBoard loadBoard (int maxWidth, int maxHeight) {
+    public GameBoard loadSavedBoard () {
         SaveGameData data = new SaveGameData();
         if (!data.loadFrom(prefs)) {
             return null;
         }
-        return loadBoard(maxWidth, maxHeight, data);
+        return loadBoard(data);
     }
 
-    public static GameBoard loadFixedBoard (int maxWidth, int maxHeight, SaveGameData data) {
-        GameBoard board = loadBoard(maxWidth, maxHeight, data);
+    public static GameBoard loadFixedBoard (SaveGameData data) {
+        return loadBoard(data);
+    }
+
+    public static int[] getBitsForBoard(GameBoard board) {
         SparseIntArray bitCache = new SparseIntArray(47);
-        for (int rowNum = 0; rowNum < data.rowCount; rowNum++) {
-            for (int colNum = 0; colNum < data.colCount; colNum++) {
-                BaseTile tile = board.tileAt(colNum, rowNum);
+        int rowCount = board.getRowCount();
+        int colCount = board.getColCount();
+        for (int rowNum = 0; rowNum < rowCount; rowNum++) {
+            for (int colNum = 0; colNum < colCount; colNum++) {
+                BaseTile tile = board.getTile(colNum, rowNum);
                 if (tile != null) {
                     if (tile instanceof TubeTile) {
                         bitCache.put(tile.getBits(), 0);
@@ -175,14 +181,13 @@ public class BoardKeeper {
             for (int i = 0; i < bitCache.size(); i++) {
                 bits[i] = bitCache.keyAt(i);
             }
-            board.loadTiles(bits);
+            return bits;
         }
-        return board;
+        return null;
     }
 
     public Boolean couldResumeGame() {
-        Boolean couldResume = (new SaveGameData()).loadFrom(prefs);
-        return couldResume;
+        return (new SaveGameData()).loadFrom(prefs);
     }
 
 }

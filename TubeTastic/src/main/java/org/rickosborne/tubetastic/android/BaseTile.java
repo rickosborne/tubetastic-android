@@ -11,17 +11,11 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BaseTile extends Actor {
+public class BaseTile {
 
     private static final class OutletOffset {
         public int col = 0;
         public int row = 0;
-    }
-
-    public static enum Power {
-        NONE,
-        SOURCED,
-        SUNK
     }
 
     public static final String DIRECTION_NORTH = "N";
@@ -39,13 +33,6 @@ public class BaseTile extends Actor {
     public static final SparseArray<OutletOffset> outletOffsets;
     public static final SparseArray<SparseIntArray> outletRotationsReverse;
     public static final SparseIntArray directionReverse;
-    public static final Color COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
-    public static final Color COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-    public static final Color COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
-    public static final Color COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
-    public static final float SIZE_PADDING = 1f / 16f;
-    public static final float SIZE_ARCWIDTH = 1f / 8f;
-    private TileRenderer renderer;
 
     static {
         // sweet baby Jesus, Java needs more literals
@@ -61,7 +48,7 @@ public class BaseTile extends Actor {
                 int offset = (rotated + degrees) % 360;
                 submap.put(offset, rotated);
             }
-            outletRotationsReverse.put(-degrees, submap);
+            outletRotationsReverse.put(degrees, submap);
             OutletOffset offset = new OutletOffset();
             switch (degrees) {
                 case DEGREES_NORTH : offset.col =  0; offset.row = -1; break;
@@ -98,24 +85,31 @@ public class BaseTile extends Actor {
     protected int id = makeId(0, 0);
     protected Outlets outlets = new Outlets();
     protected int outletRotation = 0;
-    protected float midpoint = 0f;
-    protected float padding = 0;
+    protected TileWatcher watcher;
 
-    public BaseTile(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
+    public BaseTile(int colNum, int rowNum, GameBoard board) {
         super();
-        init(colNum, rowNum, x, y, size, board);
+        init(colNum, rowNum, board);
     }
 
-    protected void init(int colNum, int rowNum, float x, float y, float size, GameBoard board) {
+    protected void init(int colNum, int rowNum, GameBoard board) {
         this.colNum = colNum;
         this.rowNum = rowNum;
         this.id = makeId(colNum, rowNum);
         this.board = board;
-        this.resize(x, y, size);
     }
 
     public String toString() {
-        return String.format("%s %d,%d (%.0f,%.0f/%.0fx%.0f) %s", getClass().getSimpleName(), colNum, rowNum, getX(), getY(), getWidth(), getHeight(), outlets);
+        StringBuilder connected = new StringBuilder();
+        for (int degrees : outletDegrees) {
+            if (hasOutletTo(degrees)) {
+                BaseTile neighbor = neighborAt(degrees);
+                if ((neighbor != null) && neighbor.hasOutletTo(directionReverse.get(degrees, -1))) {
+                    connected.append(String.format(" %s:%d:%d,%d", neighbor.power, degrees, neighbor.colNum, neighbor.rowNum));
+                }
+            }
+        }
+        return String.format("%s %d,%d %s %s", getClass().getSimpleName(), colNum, rowNum, outlets, connected);
     }
 
     public boolean hasOutletTo(int degrees) {
@@ -153,11 +147,17 @@ public class BaseTile extends Actor {
 
     public BaseTile neighborAt(int degrees) {
         OutletOffset offset = outletOffsets.get(degrees);
-        return board.tileAt(colNum + offset.col, rowNum + offset.row);
+        return board.getTile(colNum + offset.col, rowNum + offset.row);
     }
 
     public void setPower(Power power) {
-        this.power = power;
+        Power fromPower = this.power;
+        if (fromPower != power) {
+            this.power = power;
+            if (watcher != null) {
+                watcher.onTilePower(this, fromPower, power);
+            }
+        }
     }
 
     public boolean isSourced() {
@@ -172,38 +172,41 @@ public class BaseTile extends Actor {
         return (this.power == Power.NONE);
     }
 
-    protected void resize(float size) {
-        midpoint = MathUtils.floor(size * 0.5f);
-        setOrigin(midpoint, midpoint);
-        setSize(midpoint * 2, midpoint * 2);
-        padding = MathUtils.floor(size * SIZE_PADDING);
-    }
-
-    protected void resize(float x, float y, float size) {
-        resize(size);
-        setPosition((int) x, (int) y);
-    }
-
     public int getBits() { return outlets.getBits(); }
     public void setBits(int bits) { outlets.setBits(bits); }
     public void setColRow(int colNum, int rowNum) {
-        this.colNum = colNum;
-        this.rowNum = rowNum;
-        this.id = makeId(colNum, rowNum);
+        int fromColNum = this.colNum;
+        int fromRowNum = this.rowNum;
+        if ((fromColNum != colNum) || (fromRowNum != rowNum)) {
+            // // Log.d("BaseTile", String.format("setColRow %s to %d,%d", this, colNum, rowNum));
+            this.colNum = colNum;
+            this.rowNum = rowNum;
+            this.id = makeId(colNum, rowNum);
+            if (watcher != null) {
+                watcher.onTileMove(this, fromColNum, fromRowNum, colNum, rowNum);
+            }
+        }
     }
 
-    public void setRenderer(TileRenderer renderer) { this.renderer = renderer; }
-
-    @Override
-    public void draw(SpriteBatch batch, float parentAlpha) {
-        Color tileColor = getColor();
-        Color batchColor = batch.getColor();
-        Color newColor = batchColor.cpy();
-        newColor.a *= tileColor.a * parentAlpha;
-        batch.setColor(newColor);
-        batch.draw(renderer.getTextureRegionForTile(this), getX(), getY(), getOriginX(), getOriginY(), getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation());
-        batch.setColor(batchColor);
+    public void spin() {
+        outletRotation += 90;
+        outletRotation %= 360;
+        // // Log.d("BaseTile", String.format("%s spin to %d", this, outletRotation));
+        if (watcher != null) {
+            watcher.onTileSpin(this);
+        }
     }
+
+    public void vanish() {
+        if (watcher != null) {
+            watcher.onTileVanish(this);
+        }
+    }
+
+    public void setWatcher(TileWatcher watcher) {
+        this.watcher = watcher;
+    }
+
 }
 
 

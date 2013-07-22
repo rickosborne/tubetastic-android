@@ -107,7 +107,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         if (continuousRendering) {
             return;
         }
-        Log.d("GdxActivity", "startRendering");
+        // Log.d("GdxActivity", "startRendering");
         continuousRendering = true;
         deltaNeedsReset = true;
     }
@@ -117,7 +117,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         if (!continuousRendering) {
             return;
         }
-        Log.d("GdxActivity", "stopRendering");
+        // Log.d("GdxActivity", "stopRendering");
         continuousRendering = false;
         Gdx.graphics.requestRendering();
     }
@@ -129,7 +129,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
 
     @Override
     public void requestRender() {
-        Log.d("GdxActivity", "requestRender");
+        // Log.d("GdxActivity", "requestRender");
         Gdx.graphics.requestRendering();
     }
 

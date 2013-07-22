@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
+import com.badlogic.gdx.math.Rectangle;
 
 public class GameActivity extends GdxActivity implements ShakeListener.ShakeHandler {
 
@@ -12,9 +13,10 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     public static final int COUNT_COLS = 7;
     public static final int COUNT_ROWS = 9;
 
-    protected GameBoard board;
+    protected BoardActor boardActor;
     protected boolean resume = true;
     protected ShakeListener shakeListener = new ShakeListener(this);
+    protected Rectangle boardBounds;
 
     @Override
     protected AndroidApplicationConfiguration getConfig() {
@@ -29,6 +31,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         boolean wantResume = getIntent().getBooleanExtra(ARG_RESUME, true);
         setResume(wantResume);
         FreetypeActor.flushCache();
+        boardBounds = new Rectangle(0, 0, 0, 0);
     }
 
     @Override
@@ -66,7 +69,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
 
     @Override
     public void dispose() {
-        (new BoardKeeper(getApplicationContext())).saveBoard(board);
+        saveBoard();
         super.dispose();
     }
 
@@ -79,8 +82,10 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
-        if (board != null) {
-            board.resizeToMax(width, height);
+        boardBounds.width = width;
+        boardBounds.height = height;
+        if (boardActor != null) {
+            boardActor.resizeToFit(boardBounds);
         }
     }
 
@@ -96,52 +101,55 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         loadOrCreateBoard();
     }
 
-    private GameBoard loadBoard() {
+    private BoardActor loadBoard() {
         BoardKeeper boardKeeper = new BoardKeeper(getApplicationContext());
-        GameBoard newBoard = boardKeeper.loadBoard(width, height);
+        GameBoard newBoard = boardKeeper.loadSavedBoard();
         if (newBoard != null) {
-            newBoard.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
-            newBoard.resizeToMax(width, height);
-            newBoard.addGameEventListener(new GameSound());
-            newBoard.setRenderControls(this);
-            newBoard.loadTiles();
+            boardActor = new BoardActor(newBoard, boardBounds);
+            boardActor.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
+            boardActor.resizeToFit(boardBounds);
+            boardActor.addGameEventListener(new GameSound());
+            boardActor.setRenderControls(this);
+            boardActor.loadTiles();
+            return boardActor;
         }
-        return newBoard;
+        return null;
     }
 
     private void saveBoard() {
-        (new BoardKeeper(getApplicationContext())).saveBoard(board);
+        (new BoardKeeper(getApplicationContext())).saveBoard(boardActor.getGameBoard());
     }
 
-    private GameBoard createBoard() {
-        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS, width, height, new ScoreKeeper(getApplicationContext()));
+    private BoardActor createBoard() {
+        GameBoard newBoard = new GameBoard(COUNT_COLS, COUNT_ROWS);
         newBoard.randomizeTiles();
-        newBoard.addGameEventListener(new GameSound());
-        newBoard.setRenderControls(this);
-        newBoard.loadTiles();
-        return newBoard;
+        boardActor = new BoardActor(newBoard, boardBounds);
+        boardActor.addGameEventListener(new GameSound());
+        boardActor.setRenderControls(this);
+        boardActor.loadTiles();
+        return boardActor;
     }
 
     private void loadOrCreateBoard() {
         if (resume) {
-            board = loadBoard();
+            loadBoard();
         }
-        if (board == null) {
-            board = createBoard();
+        if ((boardActor == null) || !resume) {
+            createBoard();
         }
         stage.clear();
-        stage.addActor(board);
-        board.begin();
+        stage.addActor(boardActor);
+        boardActor.begin();
     }
 
     public void setResume(Boolean resume) { this.resume = resume; }
-    public int getScore() { return board.getScore(); }
+    public int getScore() { return boardActor.getGameBoard().getScore(); }
 
     @Override
     public void onShake() {
-        if (board.isSettled() && board.isReady()) {
-            board.randomizeTiles();
-            board.readyForSweep();
+        if (boardActor.getGameBoard().isSettled() && boardActor.isReady()) {
+            boardActor.randomizeTiles();
+            boardActor.readyForSweep();
         }
     }
 }

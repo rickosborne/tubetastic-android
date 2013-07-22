@@ -35,7 +35,7 @@ public class FontableTextView extends TextView {
 //                TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.FontableTextView);
 //                String fontName = a.getString(R.styleable.FontableTextView_font);
 //                String fontPath = "fonts/" + fontName + ".ttf";
-//                Log.d("font", fontPath);
+//                // Log.d("font", fontPath);
 //                Typeface tf = Typeface.createFromAsset(context.getAssets(), fontPath);
 //                setTypeface(tf);
 //            }

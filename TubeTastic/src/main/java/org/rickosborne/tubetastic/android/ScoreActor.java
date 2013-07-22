@@ -31,7 +31,7 @@ public class ScoreActor extends FreetypeActor {
         if (getHeight() != height) {
             super.setHeight(height);
             setFontSize((int) (height - (2 * height * SCORE_PADDING)));
-            Log.d("ScoreActor", String.format("setHeight h:%.0f fsz:%d", height, fontSize));
+            // Log.d("ScoreActor", String.format("setHeight h:%.0f fsz:%d", height, fontSize));
         }
     }
 }

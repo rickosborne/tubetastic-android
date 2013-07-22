@@ -35,7 +35,8 @@ public class TileLoaderActor extends ProgressActor {
     private String labelText = labelTexts[labelTextNum];
 
     public TileLoaderActor(int tileSize, TileRenderer renderer, TileLoaderWatcher watcher) {
-        super(SplashActivity.FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, labelUnique, false, BaseTile.COLOR_ARC);
+        super(SplashActivity.FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, labelUnique, false, TileActor.COLOR_ARC);
+        // Log.d("TileLoaderActor", String.format("ctor tileSize:%d", tileSize));
         this.tileSize = tileSize;
         this.renderer = renderer;
         this.watcher = watcher;
@@ -52,6 +53,7 @@ public class TileLoaderActor extends ProgressActor {
     }
 
     public void setBits(int... bits) {
+        // Log.d("TileLoaderActor", String.format("setBits n:%d", bits.length));
         tiles.clear();
         tileCount = 0;
         tileNum = 0;
@@ -74,26 +76,26 @@ public class TileLoaderActor extends ProgressActor {
         if (tileNum < tileCount) {
             setPercent((float) tileNum / (float) tileCount);
             setText(String.format(labelText, percent * 100f));
-//            Log.d("TileLoader", String.format("act %.0f num:%d", percent * 100f, tileNum));
+            // Log.d("TileLoader", String.format("act %.0f num:%d", percent * 100f, tileNum));
             int tileDigit = tiles.keyAt(tileNum);
             int tilePower = tiles.valueAt(tileNum);
             int bits = (tileDigit % 16);
             if (tileDigit == -1) {
-                renderer.loadTile(new SourceTile(0, 0, 0, 0, tileSize, null));
+                renderer.loadTile(new SourceTile(0, 0, null), tileSize);
             }
             else if (tileDigit == -2) {
-                renderer.loadTile(new SinkTile(0, 0, 0, 0, tileSize, null));
+                renderer.loadTile(new SinkTile(0, 0, null), tileSize);
             }
             else {
-                BaseTile.Power power;
+                Power power;
                 switch (tilePower) {
-                    case 1: power = BaseTile.Power.SOURCED; break;
-                    case 2: power = BaseTile.Power.SUNK; break;
-                    default: power = BaseTile.Power.NONE; break;
+                    case 1: power = Power.SOURCED; break;
+                    case 2: power = Power.SUNK; break;
+                    default: power = Power.NONE; break;
                 }
-                TubeTile tile = new TubeTile(0, 0, 0, 0, tileSize, bits, null);
+                TubeTile tile = new TubeTile(0, 0, bits, null);
                 tile.setPower(power);
-                renderer.loadTile(tile);
+                renderer.loadTile(tile, tileSize);
             }
             tileNum++;
             if (tileNum >= tileCount) {

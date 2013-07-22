@@ -62,9 +62,9 @@ public class GameSound extends BaseGameEventListener {
     }
 
     @Override
-    public boolean onVanishTiles(Set<TubeTile> tiles) {
+    public boolean onVanishTilesStart() {
         boom.play();
-        return super.onVanishTiles(tiles);
+        return super.onVanishTilesStart();
     }
 
     @Override

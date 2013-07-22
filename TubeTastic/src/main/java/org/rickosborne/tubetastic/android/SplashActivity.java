@@ -3,6 +3,7 @@ package org.rickosborne.tubetastic.android;
 import android.content.Intent;
 import android.util.Log;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
@@ -15,18 +16,18 @@ public class SplashActivity extends GdxActivity {
     protected static String TEXT_TITLE1 = "Tube";
     protected static String TEXT_TITLE2 = "Tastic";
     protected static String TEXT_TITLE3 = "!";
-    protected static Color COLOR_TITLE1 = SourceTile.COLOR_POWER_SOURCED;
-    protected static Color COLOR_TITLE2 = SinkTile.COLOR_POWER_SUNK;
-    protected static Color COLOR_TITLE3 = BaseTile.COLOR_ARC;
+    protected static Color COLOR_TITLE1 = TileActor.COLOR_POWER_SOURCED;
+    protected static Color COLOR_TITLE2 = TileActor.COLOR_POWER_SUNK;
+    protected static Color COLOR_TITLE3 = TileActor.COLOR_ARC;
     protected static String UNIQUE_TITLE = FreetypeActor.uniqueCharacters(TEXT_TITLE1 + TEXT_TITLE2 + TEXT_TITLE3);
     protected static String FONT_SCOREINST = "KiteOne-Regular";
     protected static String TEXT_SCORE = "High Score: %d";
     protected static String DIGITS_SCORE = "0123456789";
-    protected static Color COLOR_SCORE = new Color(BaseTile.COLOR_ARC.r, BaseTile.COLOR_ARC.g, BaseTile.COLOR_ARC.b, BaseTile.COLOR_ARC.a * 0.4f);
+    protected static Color COLOR_SCORE = new Color(TileActor.COLOR_ARC.r, TileActor.COLOR_ARC.g, TileActor.COLOR_ARC.b, TileActor.COLOR_ARC.a * 0.4f);
     protected static String TEXT_INST1 = "Tap the squares to complete the";
     protected static String TEXT_INST2 = "connection and start a new game.";
     protected static String UNIQUE_SCOREINST = FreetypeActor.uniqueCharacters(TEXT_SCORE + DIGITS_SCORE + TEXT_INST1 + TEXT_INST2);
-    protected static Color COLOR_INST = BaseTile.COLOR_ARC;
+    protected static Color COLOR_INST = TileActor.COLOR_ARC;
     public final static int REQUEST_GAME = 1;
 
     protected FreetypeActor titleActor1 = new FreetypeActor(FONT_TITLE, FreetypeActor.Alignment.WEST, UNIQUE_TITLE, false, COLOR_TITLE1, TEXT_TITLE1);
@@ -35,7 +36,7 @@ public class SplashActivity extends GdxActivity {
     protected FreetypeActor scoreActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false);
     protected FreetypeActor instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
     protected FreetypeActor instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
-    protected GameBoard gameBoard;
+    protected BoardActor boardActor;
     protected InputListener onClickListener = new InputListener(){
         @Override
         public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
@@ -44,6 +45,7 @@ public class SplashActivity extends GdxActivity {
         }
     };
     private int score;
+    protected Rectangle boardBounds = new Rectangle(0, 0, 0, 0);
 
     @Override
     public void create() {
@@ -103,7 +105,7 @@ public class SplashActivity extends GdxActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("SplashActivity", String.format("onActivityResult %d %d", requestCode, resultCode));
+        // Log.d("SplashActivity", String.format("onActivityResult %d %d", requestCode, resultCode));
         switch (requestCode) {
             case REQUEST_GAME:
                 if (data != null) {
@@ -140,10 +142,10 @@ public class SplashActivity extends GdxActivity {
     }
 
     private void clearBoard() {
-        if (gameBoard != null) {
-            gameBoard.removeAllGameEventListeners();
-            gameBoard.remove();
-            gameBoard = null;
+        if (boardActor != null) {
+            boardActor.removeAllGameEventListeners();
+            boardActor.remove();
+            boardActor = null;
         }
     }
 
@@ -153,15 +155,22 @@ public class SplashActivity extends GdxActivity {
             return;
         }
         int boardHeight = height / 3;
-        gameBoard = BoardKeeper.loadFixedBoard(width, boardHeight, new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
-        gameBoard.setRenderControls(this);
-        gameBoard.setY(gameBoard.getY() + height / 3);
-        stage.addActor(gameBoard);
+        boardBounds.set(0, boardHeight, width, boardHeight);
+        final GameBoard gameBoard = BoardKeeper.loadFixedBoard(new BoardKeeper.SaveGameData(4, 1, "4AB1", 0));
+        boardActor = new BoardActor(gameBoard, boardBounds);
+        boardActor.setRenderControls(this);
+        stage.addActor(boardActor);
+        boardActor.loadTiles(BoardKeeper.getBitsForBoard(gameBoard));
         final SplashActivity self = this;
-        final GameBoard board = this.gameBoard;
-        gameBoard.addGameEventListener(new GameSound() {
+        boardActor.addGameEventListener(new GameSound() {
+
             @Override
-            public boolean onDropTiles(Set<BoardSweeper.DroppedTile> tiles) {
+            public boolean onVanishBoard(GameBoard board) {
+                return INTERRUPT_YES;
+            }
+
+            @Override
+            public boolean onVanishTilesFinish() {
                 clearBoard();
                 Intent i = new Intent(self, GameActivity.class);
                 i.putExtra(GameActivity.ARG_RESUME, true);
@@ -170,11 +179,13 @@ public class SplashActivity extends GdxActivity {
             }
 
             @Override
-            public boolean onVanishBoard(GameBoard board) {
-                return super.onVanishTiles(null);
+            public boolean onAppearTiles() {
+                super.onAppearTiles();
+                return INTERRUPT_YES;
             }
+
         });
-        gameBoard.begin();
+        boardActor.begin();
     }
 
     @Override
