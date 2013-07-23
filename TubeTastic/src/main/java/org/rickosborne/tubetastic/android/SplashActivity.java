@@ -1,19 +1,19 @@
 package org.rickosborne.tubetastic.android;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.*;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-
-import java.util.Set;
 
 public class SplashActivity extends GdxActivity {
 
@@ -47,19 +47,37 @@ public class SplashActivity extends GdxActivity {
     protected FreetypeActor instActor3;
     protected FreetypeActor verActor;
     protected BoardActor boardActor;
-    protected InputListener onClickListener = new InputListener(){
+    protected OptionsButtonActor optionsButtonActor;
+    protected InputListener onClickAboutListener = new InputListener(){
         @Override
         public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
             launchAbout();
             return super.touchDown(event, x, y, pointer, button);
         }
     };
+    protected boolean hasMenuButton = false;
+
+    protected InputListener onClickOptionsListener = new InputListener() {
+        @Override
+        public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+            optionsButtonActor.onTouch();
+            showPopup(null);
+            return super.touchDown(event, x, y, pointer, button);
+        }
+    };
     private int score;
     protected Rectangle boardBounds = new Rectangle(0, 0, 0, 0);
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        registerForContextMenu(graphics.getView());
+        hasMenuButton = Build.VERSION.SDK_INT <= 10 || (Build.VERSION.SDK_INT >= 14 && ViewConfiguration.get(getApplicationContext()).hasPermanentMenuKey());
+    }
+
     protected void removeListeners(Actor actor) {
         if (actor != null) {
-            actor.removeListener(onClickListener);
+            actor.removeListener(onClickAboutListener);
         }
     }
 
@@ -81,7 +99,7 @@ public class SplashActivity extends GdxActivity {
         instActor1 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST1);
         instActor2 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST2);
         instActor3 = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.MIDDLE, UNIQUE_SCOREINST, false, COLOR_INST, TEXT_INST3);
-        verActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.EAST, UNIQUE_VER, false, COLOR_VER, getAppVersion());
+        verActor = new FreetypeActor(FONT_SCOREINST, FreetypeActor.Alignment.WEST, UNIQUE_VER, false, COLOR_VER, getAppVersion());
         stage.addActor(titleActor1);
         stage.addActor(titleActor2);
         stage.addActor(titleActor3);
@@ -94,11 +112,18 @@ public class SplashActivity extends GdxActivity {
         titleActor2.setTouchable(Touchable.enabled);
         titleActor3.setTouchable(Touchable.enabled);
         verActor.setTouchable(Touchable.enabled);
-        titleActor1.addListener(onClickListener);
-        titleActor2.addListener(onClickListener);
-        titleActor3.addListener(onClickListener);
-        verActor.addListener(onClickListener);
+        titleActor1.addListener(onClickAboutListener);
+        titleActor2.addListener(onClickAboutListener);
+        titleActor3.addListener(onClickAboutListener);
+        verActor.addListener(onClickAboutListener);
         scoreActor.setColor(GamePrefs.COLOR_ARC.r, GamePrefs.COLOR_ARC.g, GamePrefs.COLOR_ARC.b, GamePrefs.COLOR_ARC.a * 0.4f);
+        if (!hasMenuButton) {
+            optionsButtonActor = new OptionsButtonActor();
+            optionsButtonActor.setColor(0.5f, 0.5f, 0.5f, 1.0f);
+            optionsButtonActor.addListener(onClickOptionsListener);
+            optionsButtonActor.setTouchable(Touchable.enabled);
+            stage.addActor(optionsButtonActor);
+        }
         FreetypeActor.flushCache();
     }
 
@@ -140,8 +165,12 @@ public class SplashActivity extends GdxActivity {
         instActor2.setBounds(0, instY, width, instHeight * 2);
         instActor3.setFontSize(instHeight);
         instActor3.setBounds(0, instY - instLineHeight, width, instHeight * 2);
-        verActor.setFontSize(height / 34);
-        verActor.setBounds(0, 0, width - height / 60, height / 30);
+        float optionsSize = height / 28;
+        verActor.setFontSize((int) (optionsSize * 0.75f));
+        verActor.setBounds(optionsSize * 0.5f, 0, width / 2, optionsSize);
+        if (!hasMenuButton) {
+            optionsButtonActor.setBounds(width - optionsSize, 0, optionsSize, optionsSize);
+        }
         score = 0;
         updateScore();
         resetBoard();
@@ -176,11 +205,27 @@ public class SplashActivity extends GdxActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.splash, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        return onMenuItemSelected(item) || super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.splash, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        return onMenuItemSelected(item) || super.onContextItemSelected(item);
+    }
+
+    protected boolean onMenuItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.action_settings:
                 launchSettings();
@@ -192,7 +237,7 @@ public class SplashActivity extends GdxActivity {
                 launchNew();
                 return true;
         }
-        return super.onOptionsItemSelected(item);
+        return false;
     }
 
     private void updateScore() {
@@ -301,6 +346,34 @@ public class SplashActivity extends GdxActivity {
             // still don't care
         }
         return "";
+    }
+
+    protected void showPopup(View v) {
+        if (hasMenuButton) {
+            return;
+        }
+        final SplashActivity context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+                dialog.setItems(new CharSequence[]{
+                        "Settings",
+                        "About",
+                        "New Game From Zero"
+                }, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        switch (i) {
+                            case 0: launchSettings(); break;
+                            case 1: launchAbout(); break;
+                            case 2: launchNew(); break;
+                        }
+                    }
+                });
+                dialog.show();
+            }
+        });
     }
 
 }

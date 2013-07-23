@@ -2,13 +2,13 @@
 	<item android:id="@+id/action_settings"
 	      android:title="@string/title_activity_settings"
 	      android:orderInCategory="100"
-	      android:showAsAction="never" />
+	      android:showAsAction="always" />
 	<item android:id="@+id/action_about"
 	      android:title="@string/title_activity_about"
 	      android:orderInCategory="200"
-	      android:showAsAction="never" />
+	      android:showAsAction="always" />
 	<item android:id="@+id/action_newgame"
 	      android:title="@string/title_activity_newgame"
 	      android:orderInCategory="300"
-	      android:showAsAction="never" />
+	      android:showAsAction="always" />
 </menu>
