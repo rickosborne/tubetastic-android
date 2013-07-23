@@ -39,5 +39,8 @@
 	<string name="color_score_summary">Text color for the score.</string>
 	<string name="color_back">Background</string>
 	<string name="color_back_summary">Background color for the screen.</string>
+	<string name="pref_title_sound">Sounds</string>
+	<string name="play_sound">Play Sounds</string>
+	<string name="play_sound_summary">Toggle interaction sounds</string>
 
 </resources>

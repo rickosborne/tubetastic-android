@@ -14,6 +14,7 @@ public class GamePrefs {
     public static Color COLOR_POWER_SOURCED;
     public static Color COLOR_BACK;
     public static Color COLOR_SCORE;
+    public static boolean SOUND_GLOBAL;
 
     protected static String KEY_COLOR_CUSTOM = "color:custom";
     protected static String KEY_COLOR_ARC    = "color:arc";
@@ -22,6 +23,7 @@ public class GamePrefs {
     protected static String KEY_COLOR_NONE   = "color:none";
     protected static String KEY_COLOR_BACK   = "color:back";
     protected static String KEY_COLOR_SCORE  = "color:score";
+    protected static String KEY_SOUND_GLOBAL = "sound:global";
 
     static {
         setDefaults();
@@ -39,15 +41,17 @@ public class GamePrefs {
             COLOR_BACK          = getColor(preferences, KEY_COLOR_BACK,   COLOR_BACK);
             COLOR_SCORE         = getColor(preferences, KEY_COLOR_SCORE,  COLOR_SCORE);
         }
+        SOUND_GLOBAL = getBoolean(preferences, KEY_SOUND_GLOBAL, SOUND_GLOBAL);
     }
 
     protected static void setDefaults() {
-        COLOR_ARC = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
+        COLOR_ARC           = new Color(0.933333f, 0.933333f, 0.933333f, 1.0f);
         COLOR_POWER_NONE    = new Color(0.5f, 0.5f, 0.5f, 1.0f);
         COLOR_POWER_SUNK    = new Color(1.0f, 0.6f, 0f, 1.0f);
         COLOR_POWER_SOURCED = new Color(0f, 0.6f, 1.0f, 1.0f);
         COLOR_SCORE         = new Color(0.625f, 0.625f, 0.625f, 1.0f);
         COLOR_BACK          = Color.BLACK;
+        SOUND_GLOBAL        = true;
     }
 
     protected static boolean getBoolean(SharedPreferences preferences, String prefName, boolean defaultValue) {

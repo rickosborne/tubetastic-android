@@ -278,8 +278,10 @@ public class SplashActivity extends GdxActivity {
         boardActor.setRenderControls(this);
         stage.addActor(boardActor);
         boardActor.loadTiles(BoardKeeper.getBitsForBoard(gameBoard));
-        final SplashActivity self = this;
-        boardActor.addGameEventListener(new GameSound() {
+        if (GamePrefs.SOUND_GLOBAL) {
+            boardActor.addGameEventListener(new GameSound());
+        }
+        boardActor.addGameEventListener(new BaseGameEventListener() {
 
             @Override
             public boolean onVanishBoard(GameBoard board) {
@@ -295,7 +297,6 @@ public class SplashActivity extends GdxActivity {
 
             @Override
             public boolean onAppearTiles() {
-                super.onAppearTiles();
                 return INTERRUPT_YES;
             }
 

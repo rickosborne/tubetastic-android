@@ -72,4 +72,15 @@
 
 	</PreferenceCategory>
 
+	<PreferenceCategory android:title="@string/pref_title_sound">
+
+		<CheckBoxPreference
+				android:key="sound:global"
+		        android:title="@string/play_sound"
+		        android:summary="@string/play_sound_summary"
+		        android:defaultValue="true"
+				/>
+
+	</PreferenceCategory>
+
 </PreferenceScreen>

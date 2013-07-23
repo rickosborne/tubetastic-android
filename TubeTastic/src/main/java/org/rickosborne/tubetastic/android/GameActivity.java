@@ -141,7 +141,9 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         stage.addActor(boardActor);
         boardActor.setScoreKeeper(new ScoreKeeper(getApplicationContext()));
         boardActor.resizeToFit(boardBounds);
-        boardActor.addGameEventListener(new GameSound());
+        if (GamePrefs.SOUND_GLOBAL) {
+            boardActor.addGameEventListener(new GameSound());
+        }
         boardActor.loadTiles();
         boardActor.begin();
     }
