@@ -55,7 +55,6 @@ public class SplashActivity extends GdxActivity {
             return super.touchDown(event, x, y, pointer, button);
         }
     };
-    protected boolean hasMenuButton = false;
 
     protected InputListener onClickOptionsListener = new InputListener() {
         @Override
@@ -67,13 +66,6 @@ public class SplashActivity extends GdxActivity {
     };
     private int score;
     protected Rectangle boardBounds = new Rectangle(0, 0, 0, 0);
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        registerForContextMenu(graphics.getView());
-        hasMenuButton = Build.VERSION.SDK_INT <= 10 || (Build.VERSION.SDK_INT >= 14 && ViewConfiguration.get(getApplicationContext()).hasPermanentMenuKey());
-    }
 
     protected void removeListeners(Actor actor) {
         if (actor != null) {
@@ -213,18 +205,6 @@ public class SplashActivity extends GdxActivity {
         return onMenuItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.splash, menu);
-    }
-
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        return onMenuItemSelected(item) || super.onContextItemSelected(item);
-    }
-
     protected boolean onMenuItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.action_settings:
@@ -260,7 +240,7 @@ public class SplashActivity extends GdxActivity {
 
     private void clearBoard() {
         if (boardActor != null) {
-            boardActor.removeAllGameEventListeners();
+//            boardActor.removeAllGameEventListeners();
             boardActor.remove();
             boardActor = null;
         }

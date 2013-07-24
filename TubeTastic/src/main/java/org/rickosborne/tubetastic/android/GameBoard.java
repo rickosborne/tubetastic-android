@@ -26,6 +26,7 @@ public class GameBoard {
         public Set<TileChangePower> powered;
         public Set<TubeTile> vanished;
         public Set<TileChangeAppear> appeared;
+        public boolean isRandom = false;
         public TileChangeSet(int maxTileCount) {
             moved = new HashSet<TileChangeMove>(maxTileCount);
             powered = new HashSet<TileChangePower>(maxTileCount);
@@ -92,25 +93,16 @@ public class GameBoard {
     }
 
     public void randomizeTiles() {
-        // Log.d("GameBoard", "randomizeTiles");
+        Log.d("GameBoard", "randomizeTiles");
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-            for (int colNum = 0; colNum < colCount; colNum++) {
-                BaseTile tile = getTile(colNum, rowNum);
+            for (int colNum = 1; colNum < colCount - 1; colNum++) {
+                TubeTile tile = (TubeTile) getTile(colNum, rowNum);
                 if (tile != null) {
+//                    tile.vanish();
                     setTile(colNum, rowNum, null);
                 }
-                TILE_TYPE type;
-                if (colNum == 0) {
-                    type = TILE_TYPE.SOURCE;
-                }
-                else if (colNum == colCount - 1) {
-                    type = TILE_TYPE.SINK;
-                }
-                else {
-                    type = TILE_TYPE.TUBE;
-                }
-                setTile(colNum, rowNum, type, 0);
+                setTile(colNum, rowNum, TILE_TYPE.TUBE, 0);
             }
         }
         sweepUntilSettled();

@@ -1,7 +1,9 @@
 package org.rickosborne.tubetastic.android;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ViewConfiguration;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.android.AndroidApplication;
@@ -21,11 +23,13 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
     protected float delta;
     protected boolean continuousRendering = true;
     protected boolean deltaNeedsReset = false;
+    protected boolean hasMenuButton = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initialize(this, getConfig());
+        hasMenuButton = Build.VERSION.SDK_INT <= 10 || (Build.VERSION.SDK_INT >= 14 && ViewConfiguration.get(getApplicationContext()).hasPermanentMenuKey());
     }
 
     @Override

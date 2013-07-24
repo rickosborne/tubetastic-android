@@ -108,23 +108,30 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
     }
 
     public void randomizeTiles() {
-        // // Log.d("BoardActor", "randomizeTiles");
+        Log.d("BoardActor", "randomizeTiles");
         ready = false;
         gameBoard.randomizeTiles();
+        addGameActors();
+        for (int rowNum = 0; rowNum < rowCount; rowNum++) {
+            for (int colNum = 1; colNum < colCount - 1; colNum++) {
+                getTileActor(colNum, rowNum).appear();
+            }
+        }
         notifyListeners(EVENT_TYPE.BOARD_RANDOM);
+        ready = true;
     }
 
     public void begin() {
         // // Log.d("BoardActor", "begin");
         if (isLoading) {
-            // // Log.d("BoardActor", "begin isLoading return");
+            Log.d("BoardActor", "begin isLoading return");
             return;
         }
         final BoardActor self = this;
         addListener(new InputListener() {
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-                // // Log.d("BoardActor", String.format("touchDown handled:%b ready:%b x:%.0f y:%.0f", event.isHandled(), self.isReady(), x, y));
+                Log.d("BoardActor", String.format("touchDown handled:%b ready:%b x:%.0f y:%.0f", event.isHandled(), self.isReady(), x, y));
                 try {
                     if (!event.isHandled() && !self.isWorking()) {
                         TileActor tileActor = self.tileAt(x, y);
@@ -133,13 +140,13 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
                             if (!self.notifyListeners(EVENT_TYPE.TILE_SPIN, tileActor.tile)) {
                                 tileActor.onTouchDown();
                             } else {
-                                // // Log.d("BoardActor", "touchDown notify returned INTERRUPT_YES");
+                                Log.d("BoardActor", "touchDown notify returned INTERRUPT_YES");
                             }
                         } else {
-                            // // Log.d("BoardActor", String.format("touchDown tileActor:%s", tileActor));
+                            Log.d("BoardActor", String.format("touchDown tileActor:%s", tileActor));
                         }
                     } else {
-                        // // Log.d("BoardActor", String.format("touchDown handled:%b working:%b", event.isHandled(), self.isWorking()));
+                        Log.d("BoardActor", String.format("touchDown handled:%b working:%b", event.isHandled(), self.isWorking()));
                     }
                 }
                 catch (Exception e) {
@@ -229,20 +236,20 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
                                 tileActor.setRenderer(renderer);
                                 setTileActor(change.colNum, change.rowNum, tileActor);
                                 addActor(tileActor);
-                                tileActor.appear(xForColNum(change.colNum), yForRowNum(change.rowNum));
+                                tileActor.appear();
                             }
                         }
                     }
                 } else {
-                    // // Log.d("BoardActor", "powerSweep nothing vanished");
+                    Log.d("BoardActor", "powerSweep nothing vanished");
                     ready = true;
                 }
             } else {
-                // // Log.d("BoardActor", "powerSweep unchanged");
+                Log.d("BoardActor", "powerSweep unchanged");
                 ready = true;
             }
         } else {
-            // // Log.d("BoardActor", "powerSweep NOT awaitingSweep");
+            Log.d("BoardActor", "powerSweep NOT awaitingSweep");
         }
     }
 
@@ -468,7 +475,7 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
         for (int rowNum = 0; rowNum < tileActors.length; rowNum++) {
             for (int colNum = 0; colNum < tileActors[rowNum].length; colNum++) {
                 TileActor tileActor = getTileActor(colNum, rowNum);
-                if (tileActor != null) {
+                if ((tileActor != null) && (tileActor.tile == gameBoard.getTile(colNum, rowNum))) {
                     addActor(tileActor);
                 } else {
                     BaseTile tile = gameBoard.getTile(colNum, rowNum);
@@ -499,32 +506,6 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
         }
         if (scoreBoard != null) {
             scoreBoard.setScore(toScore);
-        }
-    }
-
-    public void tileDropComplete(TileActor tile, int destinationColNum, int destinationRowNum) {
-        if (dropping.contains(tile)) {
-//            setTileActor(destinationColNum, destinationRowNum, tile);
-            dropping.remove(tile);
-            if (dropping.isEmpty()) {
-                readyForSweep();
-            }
-        } else {
-            Log.e("GameBoard", String.format("drop MISSING:%s remain:%d", tile.toString(), dropping.size()));
-        }
-    }
-
-    public void tileVanishComplete(TileActor vanishedTile) {
-        if (tileChanges.vanished.contains((TubeTile) vanishedTile.tile)) {
-            // // Log.d("BoardActor", String.format("vanish removed:%s", vanishedTile.toString()));
-            setTileActor(vanishedTile.tile.colNum, vanishedTile.tile.rowNum, null);
-            removeActor(vanishedTile);
-            tileChanges.vanished.remove(vanishedTile.tile);
-            if (tileChanges.vanished.isEmpty()) {
-                notifyListeners(EVENT_TYPE.TILES_DROP);
-            }
-        } else {
-            Log.e("GameBoard", String.format("vanish MISSING:%s remain:%d", vanishedTile.toString(), tileChanges.vanished.size()));
         }
     }
 

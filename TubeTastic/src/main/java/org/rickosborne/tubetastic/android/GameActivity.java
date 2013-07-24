@@ -1,10 +1,15 @@
 package org.rickosborne.tubetastic.android;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.view.*;
 import com.badlogic.gdx.backends.android.AndroidApplicationConfiguration;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 
 public class GameActivity extends GdxActivity implements ShakeListener.ShakeHandler {
 
@@ -17,6 +22,15 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     protected boolean resume = true;
     protected ShakeListener shakeListener = new ShakeListener(this);
     protected Rectangle boardBounds;
+    protected OptionsButtonActor optionsButtonActor;
+    protected InputListener onClickOptionsListener = new InputListener() {
+        @Override
+        public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+            optionsButtonActor.onTouch();
+            showPopup(null);
+            return super.touchDown(event, x, y, pointer, button);
+        }
+    };
 
     @Override
     protected AndroidApplicationConfiguration getConfig() {
@@ -33,6 +47,23 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         FreetypeActor.flushCache();
         boardBounds = new Rectangle(0, 0, 0, 0);
         clearColor = GamePrefs.COLOR_BACK;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.game, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_randomize_tiles:
+                onShake();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -91,6 +122,10 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         if (boardActor != null) {
             boardActor.resizeToFit(boardBounds);
         }
+        if (!hasMenuButton) {
+            float optionsSize = height / 28;
+            optionsButtonActor.setBounds(width - optionsSize, 0, optionsSize, optionsSize);
+        }
     }
 
     @Override
@@ -146,6 +181,13 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         }
         boardActor.loadTiles();
         boardActor.begin();
+        if (!hasMenuButton) {
+            optionsButtonActor = new OptionsButtonActor();
+            optionsButtonActor.setColor(0.5f, 0.5f, 0.5f, 1.0f);
+            optionsButtonActor.addListener(onClickOptionsListener);
+            optionsButtonActor.setTouchable(Touchable.enabled);
+            stage.addActor(optionsButtonActor);
+        }
     }
 
     public void setResume(Boolean resume) { this.resume = resume; }
@@ -155,7 +197,34 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     public void onShake() {
         if (boardActor.getGameBoard().isSettled() && boardActor.isReady()) {
             boardActor.randomizeTiles();
-            boardActor.readyForSweep();
+//            boardActor.readyForSweep();
         }
     }
+
+    protected void showPopup(View v) {
+        if (hasMenuButton) {
+            return;
+        }
+        final GameActivity context = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+                dialog.setItems(new CharSequence[]{
+                        "Randomize Tiles",
+                }, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        switch (i) {
+                            case 0: onShake(); break;
+                        }
+                    }
+                });
+                dialog.show();
+            }
+        });
+    }
+
+
+
 }

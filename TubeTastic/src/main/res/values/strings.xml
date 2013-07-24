@@ -42,5 +42,6 @@
 	<string name="pref_title_sound">Sounds</string>
 	<string name="play_sound">Play Sounds</string>
 	<string name="play_sound_summary">Toggle interaction sounds</string>
+	<string name="randomize_tiles">Randomize Tiles</string>
 
 </resources>

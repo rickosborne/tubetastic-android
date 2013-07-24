@@ -187,7 +187,7 @@ public class TileActor extends Actor implements TileWatcher {
         setColor(color);
     }
 
-    public void appear(float x, float y) {
+    public void appear() {
         isAppearing = true;
         if (watcher == null) {
             Log.e("TileActor", String.format("appear missing watcher %s", this));
