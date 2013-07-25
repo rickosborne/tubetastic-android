@@ -96,13 +96,16 @@ public class GameBoard {
         Log.d("GameBoard", "randomizeTiles");
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
-            for (int colNum = 1; colNum < colCount - 1; colNum++) {
+            for (int colNum = 0; colNum < colCount; colNum++) {
                 TubeTile tile = (TubeTile) getTile(colNum, rowNum);
                 if (tile != null) {
 //                    tile.vanish();
                     setTile(colNum, rowNum, null);
                 }
-                setTile(colNum, rowNum, TILE_TYPE.TUBE, 0);
+                TILE_TYPE type = TILE_TYPE.TUBE;
+                if (colNum == 0) { type = TILE_TYPE.SOURCE; }
+                else if (colNum == colCount - 1) { type = TILE_TYPE.SINK; }
+                setTile(colNum, rowNum, type, 0);
             }
         }
         sweepUntilSettled();
