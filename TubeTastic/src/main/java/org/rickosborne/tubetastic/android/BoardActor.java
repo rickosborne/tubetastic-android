@@ -54,6 +54,7 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
     protected int rowCount;
     protected int animatableCount;
     protected Rectangle bounds;
+    public boolean needsRandomizing = false;
 
     public BoardActor(GameBoard gameBoard, Rectangle bounds) {
         this.gameBoard = gameBoard;
@@ -464,7 +465,7 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
     }
 
     private void addGameActors() {
-        // // Log.d("BoardActor", "addGameActors");
+//        Log.d("BoardActor", "addGameActors");
         clear();
         if (scoreKeeper != null) {
             if (scoreBoard == null) {
@@ -486,9 +487,8 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
                         tileActor.setRenderer(renderer);
                         setTileActor(colNum, rowNum, tileActor);
                         addActor(tileActor);
-//                        tileActor.appear(xForColNum(colNum), yForRowNum(rowNum));
-                    } else {
-                        // // Log.d("BoardActor", String.format("addGameActors empty tile col:%d row:%d", colNum, rowNum));
+//                    } else {
+//                        Log.d("BoardActor", String.format("addGameActors empty tile col:%d row:%d", colNum, rowNum));
                     }
                 }
             }
@@ -586,4 +586,14 @@ public class BoardActor extends Group implements RenderController, TileLoaderAct
             notifyListeners(EVENT_TYPE.TILES_VANISH_FINISH);
         }
     }
+
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (needsRandomizing) {
+            needsRandomizing = false;
+            randomizeTiles();
+        }
+    }
+
 }

@@ -196,7 +196,8 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     @Override
     public void onShake() {
         if (boardActor.getGameBoard().isSettled() && boardActor.isReady()) {
-            boardActor.randomizeTiles();
+            boardActor.needsRandomizing = true;
+//            boardActor.randomizeTiles();
 //            boardActor.readyForSweep();
         }
     }

@@ -97,7 +97,7 @@ public class GameBoard {
         settled = false;
         for (int rowNum = 0; rowNum < rowCount; rowNum++) {
             for (int colNum = 0; colNum < colCount; colNum++) {
-                TubeTile tile = (TubeTile) getTile(colNum, rowNum);
+                BaseTile tile = getTile(colNum, rowNum);
                 if (tile != null) {
 //                    tile.vanish();
                     setTile(colNum, rowNum, null);

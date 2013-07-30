@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.GL11;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
 public class GdxActivity extends AndroidApplication implements ApplicationListener, RenderControls {
@@ -111,7 +113,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         if (continuousRendering) {
             return;
         }
-        // Log.d("GdxActivity", "startRendering");
+//        Log.d("GdxActivity", "startRendering");
         continuousRendering = true;
         deltaNeedsReset = true;
     }
@@ -121,7 +123,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
         if (!continuousRendering) {
             return;
         }
-        // Log.d("GdxActivity", "stopRendering");
+//        Log.d("GdxActivity", "stopRendering");
         continuousRendering = false;
         Gdx.graphics.requestRendering();
     }
@@ -133,7 +135,7 @@ public class GdxActivity extends AndroidApplication implements ApplicationListen
 
     @Override
     public void requestRender() {
-        // Log.d("GdxActivity", "requestRender");
+//        Log.d("GdxActivity", "requestRender");
         Gdx.graphics.requestRendering();
     }
 
