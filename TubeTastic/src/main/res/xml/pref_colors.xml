@@ -83,4 +83,15 @@
 
 	</PreferenceCategory>
 
+	<PreferenceCategory android:title="@string/pref_title_accel">
+
+		<CheckBoxPreference
+				android:key="accel:enabled"
+				android:title="@string/accel_enable"
+				android:summary="@string/accel_enable_summary"
+				android:defaultValue="true"
+				/>
+
+	</PreferenceCategory>
+
 </PreferenceScreen>

@@ -43,5 +43,8 @@
 	<string name="play_sound">Play Sounds</string>
 	<string name="play_sound_summary">Toggle interaction sounds</string>
 	<string name="randomize_tiles">Randomize Tiles</string>
+	<string name="pref_title_accel">Accelerometer</string>
+	<string name="accel_enable">Enable Accelerometer</string>
+	<string name="accel_enable_summary">Shake to randomize, but drains battery.</string>
 
 </resources>

@@ -15,6 +15,7 @@ public class GamePrefs {
     public static Color COLOR_BACK;
     public static Color COLOR_SCORE;
     public static boolean SOUND_GLOBAL;
+    public static boolean ACCEL_ENABLED;
 
     protected static String KEY_COLOR_CUSTOM = "color:custom";
     protected static String KEY_COLOR_ARC    = "color:arc";
@@ -24,6 +25,7 @@ public class GamePrefs {
     protected static String KEY_COLOR_BACK   = "color:back";
     protected static String KEY_COLOR_SCORE  = "color:score";
     protected static String KEY_SOUND_GLOBAL = "sound:global";
+    protected static String KEY_ACCEL_ENABLED = "accel:enabled";
 
     static {
         setDefaults();
@@ -42,6 +44,7 @@ public class GamePrefs {
             COLOR_SCORE         = getColor(preferences, KEY_COLOR_SCORE,  COLOR_SCORE);
         }
         SOUND_GLOBAL = getBoolean(preferences, KEY_SOUND_GLOBAL, SOUND_GLOBAL);
+        ACCEL_ENABLED = getBoolean(preferences, KEY_ACCEL_ENABLED, ACCEL_ENABLED);
     }
 
     protected static void setDefaults() {
@@ -52,6 +55,7 @@ public class GamePrefs {
         COLOR_SCORE         = new Color(0.625f, 0.625f, 0.625f, 1.0f);
         COLOR_BACK          = Color.BLACK;
         SOUND_GLOBAL        = true;
+        ACCEL_ENABLED       = true;
     }
 
     protected static boolean getBoolean(SharedPreferences preferences, String prefName, boolean defaultValue) {

@@ -20,7 +20,7 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
 
     protected BoardActor boardActor;
     protected boolean resume = true;
-    protected ShakeListener shakeListener = new ShakeListener(this);
+    protected ShakeListener shakeListener;
     protected Rectangle boardBounds;
     protected OptionsButtonActor optionsButtonActor;
     protected InputListener onClickOptionsListener = new InputListener() {
@@ -35,7 +35,8 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     @Override
     protected AndroidApplicationConfiguration getConfig() {
         AndroidApplicationConfiguration cfg = super.getConfig();
-        cfg.useAccelerometer = true;
+        GamePrefs.loadFromContext(getApplicationContext());
+        cfg.useAccelerometer = GamePrefs.ACCEL_ENABLED;
         return cfg;
     }
 
@@ -47,6 +48,9 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
         FreetypeActor.flushCache();
         boardBounds = new Rectangle(0, 0, 0, 0);
         clearColor = GamePrefs.COLOR_BACK;
+        if (GamePrefs.ACCEL_ENABLED) {
+            shakeListener = new ShakeListener(this);
+        }
     }
 
     @Override
@@ -108,7 +112,9 @@ public class GameActivity extends GdxActivity implements ShakeListener.ShakeHand
     @Override
     public void render() {
         super.render();
-        shakeListener.update(delta);
+        if (shakeListener != null) {
+            shakeListener.update(delta);
+        }
     }
 
     @Override
